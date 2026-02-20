@@ -1,49 +1,46 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { useAuth } from '../../context/AuthContext';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
+  const { isLoggedIn, logout } = useAuth();
   const router = useRouter();
+
+  if (!isLoggedIn) {
+    return (
+      <View style={styles.containerCenter}>
+        <Ionicons name="lock-closed" size={80} color="#1e293b" />
+        <Text style={styles.textLocked}>Akses Terbatas</Text>
+        <Text style={styles.subTextLocked}>Silakan login untuk melihat profil robotika kamu.</Text>
+        
+        <TouchableOpacity 
+          style={styles.btnLogin} 
+          onPress={() => router.push('/login')}
+        >
+          <Text style={styles.btnText}>LOGIN SEKARANG</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Image source={{ uri: 'https://ui-avatars.com/api/?name=Admin&background=f59e0b&color=fff' }} style={styles.avatar} />
-        <Text style={styles.name}>Admin RoboEdu</Text>
-        <Text style={styles.role}>Robotic Instructor</Text>
-      </View>
-
-      <View style={styles.menu}>
-        <MenuItem icon="person-outline" label="Edit Profil" />
-        <MenuItem icon="bookmark-outline" label="Kursus Saya" />
-        <MenuItem icon="settings-outline" label="Pengaturan" />
-        <TouchableOpacity style={styles.logout} onPress={() => router.replace('/')}>
-          <Ionicons name="log-out-outline" size={24} color="#ef4444" />
-          <Text style={styles.logoutText}>Keluar</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Tampilan Profile asli jika sudah login */}
+      <Text style={styles.title}>Profil Saya</Text>
+      <TouchableOpacity onPress={logout} style={styles.btnLogout}>
+        <Text style={{color: 'white'}}>Logout</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
-const MenuItem = ({ icon, label }: any) => (
-  <TouchableOpacity style={styles.menuItem}>
-    <Ionicons name={icon} size={24} color="#94a3b8" />
-    <Text style={styles.menuLabel}>{label}</Text>
-    <Ionicons name="chevron-forward" size={20} color="#334155" />
-  </TouchableOpacity>
-);
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#020617' },
-  header: { alignItems: 'center', paddingTop: 80, paddingBottom: 40, backgroundColor: '#0f172a' },
-  avatar: { width: 100, height: 100, borderRadius: 30, marginBottom: 15 },
-  name: { color: 'white', fontSize: 20, fontWeight: 'bold' },
-  role: { color: '#f59e0b', fontSize: 14 },
-  menu: { padding: 25 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', padding: 18, borderRadius: 20, marginBottom: 15 },
-  menuLabel: { color: 'white', flex: 1, marginLeft: 15, fontWeight: '500' },
-  logout: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 20, padding: 15 },
-  logoutText: { color: '#ef4444', marginLeft: 10, fontWeight: 'bold' }
+  containerCenter: { flex: 1, backgroundColor: '#020617', justifyContent: 'center', alignItems: 'center', padding: 40 },
+  textLocked: { color: 'white', fontSize: 22, fontWeight: 'bold', marginTop: 20 },
+  subTextLocked: { color: '#94a3b8', textAlign: 'center', marginTop: 10, lineHeight: 20 },
+  btnLogin: { backgroundColor: '#f59e0b', padding: 15, borderRadius: 12, width: '100%', alignItems: 'center', marginTop: 30 },
+  btnText: { color: '#020617', fontWeight: 'bold' },
+  // ... style lainnya
 });

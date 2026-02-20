@@ -5,16 +5,15 @@ import { useRouter } from 'expo-router';
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const router = useRouter();
-
-  const handleLogin = () => {
-    // Password rahasia kamu
-    if (username === 'admin' && password === 'ridho2026') {
-      router.replace('/(tabs)'); // Ini akan melempar kamu ke folder (tabs)
-    } else {
-      Alert.alert('Error', 'Username atau Password salah bos!');
-    }
-  };
+  const router = useRouter();// Di dalam handleLogin:
+const handleLogin = () => {
+  if (username === 'admin' && password === 'ridho2026') {
+    login(); // Set state global jadi true
+    router.replace('/(tabs)'); // Balik ke home
+  } else {
+    Alert.alert('Error', 'Username atau Password salah!');
+  }
+};
 
   return (
     <View style={styles.container}>
