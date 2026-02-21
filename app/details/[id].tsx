@@ -92,7 +92,7 @@ export default function DetailScreen() {
             </TouchableOpacity>
           ))}
 
-          {/* TOMBOL UJIAN BARU TAMBAHAN TAHAP 6 */}
+          {/* TOMBOL UJIAN TAHAP 6 */}
           {isEnrolled && (
             <TouchableOpacity 
               style={styles.quizBtn} 
@@ -104,9 +104,19 @@ export default function DetailScreen() {
             </TouchableOpacity>
           )}
 
-          <View style={{height: 100}} /> 
+          {/* Spacer diperbesar agar tidak tertutup FAB dan sticky button */}
+          <View style={{height: 120}} /> 
         </View>
       </ScrollView>
+
+      {/* FLOATING CHAT BUTTON (TAHAP 7) */}
+      <TouchableOpacity 
+        style={styles.fabChat} 
+        activeOpacity={0.8} 
+        onPress={() => router.push('/chat')}
+      >
+        <Ionicons name="chatbubbles" size={28} color="white" />
+      </TouchableOpacity>
 
       <View style={styles.bottomBar}>
         <TouchableOpacity style={[styles.btnEnroll, isEnrolled && {backgroundColor: '#10b981'}]} onPress={handleEnroll} activeOpacity={0.8}>
@@ -169,6 +179,10 @@ const styles = StyleSheet.create({
   curriculumText: { color: 'white', flex: 1, fontSize: 14, fontWeight: '500' },
   quizBtn: { backgroundColor: '#f59e0b', padding: 18, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 20 },
   quizBtnText: { color: '#020617', fontWeight: 'bold', fontSize: 16, marginLeft: 10 },
+  
+  // Style untuk Floating Action Button Chat
+  fabChat: { position: 'absolute', bottom: 105, right: 20, width: 60, height: 60, borderRadius: 30, backgroundColor: '#3b82f6', justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 6, borderWidth: 2, borderColor: '#60a5fa' },
+  
   bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#0f172a', padding: 20, borderTopWidth: 1, borderTopColor: '#1e293b' },
   btnEnroll: { backgroundColor: '#f59e0b', padding: 18, borderRadius: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   btnText: { color: '#020617', fontWeight: 'bold', fontSize: 16, marginRight: 10 },

@@ -44,6 +44,18 @@ export default function RootLayout() {
             headerTitleStyle: { fontFamily: 'Orbitron_700Bold' }
           }} 
         />
+        {/* TAMBAHAN TAHAP 7: Halaman Chat Instruktur */}
+        <Stack.Screen 
+          name="chat" 
+          options={{ 
+            presentation: 'card', 
+            headerShown: true, 
+            title: 'Tanya Instruktur',
+            headerStyle: { backgroundColor: '#0f172a' },
+            headerTintColor: '#f59e0b',
+            headerTitleStyle: { fontFamily: 'Orbitron_700Bold', fontSize: 16 }
+          }} 
+        />
       </Stack>
     </AuthProvider>
   );
