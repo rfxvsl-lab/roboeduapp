@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Animated, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 // Komponen Tombol Animasi Khusus Gaming
@@ -30,7 +30,10 @@ export default function StudioScreen() {
   const [speed, setSpeed] = useState('Med');
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Simulasi data masuk dari Robot (misal sensor ultrasonic)
+  // Scanner State
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannedDevices, setScannedDevices] = useState<string[]>([]);
+
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isConnected) {
@@ -43,7 +46,6 @@ export default function StudioScreen() {
     return () => clearInterval(interval);
   }, [isConnected]);
 
-  // Fungsi untuk mencatat aktivitas tombol ke Terminal
   const addLog = (action: string) => {
     if (!isConnected) {
       setLogs(prev => [...prev, `[WARN] Connect Bluetooth dulu! (Gagal: ${action})`]);
@@ -52,18 +54,28 @@ export default function StudioScreen() {
     setLogs(prev => [...prev, `[CMD] ${action}`]);
   };
 
-  // Fungsi Toggle Bluetooth
-  const toggleConnection = () => {
-    if (!isConnected) {
-      setLogs(prev => [...prev, '[SYS] Mencari perangkat HC-05...']);
-      setTimeout(() => {
-        setIsConnected(true);
-        setLogs(prev => [...prev, '[SYS] Berhasil terhubung ke ROBO-01!']);
-      }, 1500);
-    } else {
+  const handleConnectPress = () => {
+    if (isConnected) {
       setIsConnected(false);
       setLogs(prev => [...prev, '[SYS] Koneksi terputus.']);
+    } else {
+      setShowScanner(true);
+      setScannedDevices([]);
+      
+      // Simulasi menemukan device
+      setTimeout(() => setScannedDevices(prev => [...prev, 'HC-05 (Robo Car)']), 1500);
+      setTimeout(() => setScannedDevices(prev => [...prev, 'ESP32_BT_DEV']), 3000);
+      setTimeout(() => setScannedDevices(prev => [...prev, 'Unknown Device']), 4500);
     }
+  };
+
+  const pairDevice = (device: string) => {
+    setShowScanner(false);
+    setLogs(prev => [...prev, `[SYS] Connecting to ${device}...`]);
+    setTimeout(() => {
+      setIsConnected(true);
+      setLogs(prev => [...prev, `[SYS] Sukses terhubung ke ${device}!`]);
+    }, 1000);
   };
 
   return (
@@ -73,7 +85,7 @@ export default function StudioScreen() {
         <Text style={styles.title}>RoboControl <Text style={{color:'#f59e0b'}}>Pro</Text></Text>
         <TouchableOpacity 
           style={[styles.connectBtn, isConnected ? styles.connected : styles.disconnected]}
-          onPress={toggleConnection}
+          onPress={handleConnectPress}
         >
           <Ionicons name={isConnected ? "bluetooth" : "bluetooth-outline"} size={18} color="white" />
           <Text style={styles.connectText}>{isConnected ? "Connected" : "Connect"}</Text>
@@ -119,7 +131,7 @@ export default function StudioScreen() {
         </View>
       </View>
 
-      {/* Controller Pad (Fix Error Bebas Komentar Liar) */}
+      {/* Controller Pad */}
       <View style={styles.controllerContainer}>
         <View style={styles.dPad}>
           <GameButton icon="caret-up" onPress={() => addLog('Move FORWARD')} />
@@ -141,6 +153,35 @@ export default function StudioScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* MODAL BLUETOOTH SCANNER */}
+      <Modal visible={showScanner} transparent animationType="slide">
+        <View style={styles.modalBg}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Scan Perangkat Baru</Text>
+              <TouchableOpacity onPress={() => setShowScanner(false)}>
+                <Ionicons name="close" size={24} color="#94a3b8" />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.scanAnimation}>
+              <ActivityIndicator size="large" color="#f59e0b" />
+              <Text style={styles.scanText}>Mencari perangkat bluetooth di sekitar...</Text>
+            </View>
+
+            <ScrollView style={{maxHeight: 200}}>
+              {scannedDevices.map((dev, idx) => (
+                <TouchableOpacity key={idx} style={styles.deviceItem} onPress={() => pairDevice(dev)}>
+                  <Ionicons name="bluetooth" size={24} color="#3b82f6" />
+                  <Text style={styles.deviceName}>{dev}</Text>
+                  <Text style={styles.devicePairText}>Pair</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -174,5 +215,15 @@ const styles = StyleSheet.create({
   actionGrid: { flexDirection: 'row', justifyContent: 'center', gap: 30, marginTop: 40 },
   circleBtnRed: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#ef4444', justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#7f1d1d' },
   circleBtnYellow: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#f59e0b', justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#92400e', marginTop: -30 },
-  btnText: { color: 'white', fontWeight: '900', fontSize: 24 }
+  btnText: { color: 'white', fontWeight: '900', fontSize: 24 },
+
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
+  modalCard: { backgroundColor: '#0f172a', padding: 20, borderRadius: 25, borderWidth: 1, borderColor: '#1e293b' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  scanAnimation: { alignItems: 'center', marginBottom: 20, padding: 20, backgroundColor: '#1e293b', borderRadius: 15 },
+  scanText: { color: '#94a3b8', marginTop: 15, fontSize: 12 },
+  deviceItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1e293b', padding: 15, borderRadius: 15, marginBottom: 10 },
+  deviceName: { color: 'white', flex: 1, marginLeft: 15, fontWeight: 'bold' },
+  devicePairText: { color: '#f59e0b', fontWeight: 'bold', fontSize: 12 }
 });
