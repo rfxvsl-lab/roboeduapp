@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -311,6 +311,12 @@ export default function ProfileScreen() {
             <Ionicons name="logo-github" size={24} color="white" />
             <Text style={styles.menuLabel}>{profile.github || 'Belum diatur'}</Text>
             <Text style={{color: '#475569', fontSize: 10}}>GITHUB</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/studio')}>
+            <FontAwesome5 name="layer-group" size={20} color="#f59e0b" />
+            <Text style={styles.menuLabel}>Dashboard Studio</Text>
+            <Ionicons name="chevron-forward" size={20} color="#334155" />
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.logout} onPress={logout}>
