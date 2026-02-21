@@ -60,7 +60,7 @@ export default function RootLayout() {
         />
         {/* Admin Management Screens */}
         <Stack.Screen 
-          name="(tabs)/admin/courses" 
+          name="courses" 
           options={{ 
             presentation: 'card', 
             headerShown: true, 
@@ -71,7 +71,7 @@ export default function RootLayout() {
           }} 
         />
         <Stack.Screen 
-          name="(tabs)/admin/hardware" 
+          name="hardware" 
           options={{ 
             presentation: 'card', 
             headerShown: true, 
@@ -82,7 +82,7 @@ export default function RootLayout() {
           }} 
         />
         <Stack.Screen 
-          name="(tabs)/admin/users" 
+          name="users" 
           options={{ 
             presentation: 'card', 
             headerShown: true, 

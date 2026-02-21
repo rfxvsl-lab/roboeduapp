@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Animated, ScrollView, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // Komponen Tombol Animasi Khusus Gaming
 const GameButton = ({ icon, color = '#1e293b', onPress }: any) => {
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   controllerContainer: { flex: 1, justifyContent: 'center' },
   dPad: { alignItems: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', marginVertical: 10 },
-  btnFrame: { padding: 15, borderRadius: 20, borderWidth: 2, borderColor: '#334155', elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3 },
+  btnFrame: { padding: 15, borderRadius: 20, borderWidth: 2, borderColor: '#334155', elevation: 5, boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.3)' },
   actionGrid: { flexDirection: 'row', justifyContent: 'center', gap: 30, marginTop: 40 },
   circleBtnRed: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#ef4444', justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#7f1d1d' },
   circleBtnYellow: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#f59e0b', justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#92400e', marginTop: -30 },

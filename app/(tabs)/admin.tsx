@@ -1,7 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { getCoursesCount, getHardwareCount, getUsersCount } from '../../lib/supabase';
 
 export default function AdminPanel() {
@@ -43,15 +43,15 @@ export default function AdminPanel() {
             <ActivityIndicator size="large" color="#f59e0b" style={{ flex: 1 }} />
           ) : (
             <>
-              <AdminCard icon="book" title="Kelola Modul" count={courseCount} color="#3b82f6" onPress={() => router.push('/admin/courses')} />
-              <AdminCard icon="hardware-chip" title="Hardware" count={hardwareCount} color="#10b981" onPress={() => router.push('/admin/hardware')} />
-              <AdminCard icon="people" title="Siswa Aktif" count={userCount} color="#8b5cf6" onPress={() => router.push('/admin/users')} />
+              <AdminCard icon="book" title="Kelola Modul" count={courseCount} color="#3b82f6" onPress={() => router.push('/courses')} />
+              <AdminCard icon="hardware-chip" title="Hardware" count={hardwareCount} color="#10b981" onPress={() => router.push('/hardware')} />
+              <AdminCard icon="people" title="Siswa Aktif" count={userCount} color="#8b5cf6" onPress={() => router.push('/users')} />
               <AdminCard icon="chatbubble-ellipses" title="Tiket Bantuan" count="5" color="#ef4444" onPress={() => Alert.alert("Fitur", "Manajemen tiket bantuan belum diimplementasikan.")} />
             </>
           )}
         </View>
 
-        <TouchableOpacity style={styles.mainAction} onPress={() => router.push('/admin/courses/new')}>
+        <TouchableOpacity style={styles.mainAction} onPress={() => Alert.alert("Fitur", "Halaman tambah modul belum dibuat.")}>
           <Ionicons name="add-circle" size={24} color="#020617" />
           <Text style={styles.mainActionText}>TAMBAH MODUL BARU</Text>
         </TouchableOpacity>
@@ -59,10 +59,15 @@ export default function AdminPanel() {
         <View style={styles.recentSection}>
           <Text style={styles.sectionTitle}>Aktivitas Terbaru</Text>
           {/* TODO: Implement dynamic activity logs from Supabase */}
-          {loading ? <ActivityIndicator color="#f59e0b" /> : (
-          <Text style={styles.logText}>• User 'Budi' menyelesaikan kuis Arduino</Text>
-          <Text style={styles.logText}>• Stok Servo MG996R diperbarui</Text>
-          <Text style={styles.logText}>• Modul IoT Smart Home dipublikasikan</Text>
+          {loading ? (
+            <ActivityIndicator color="#f59e0b" />
+          ) : (
+            <>
+              <Text style={styles.logText}>• User 'Budi' menyelesaikan kuis Arduino</Text>
+              <Text style={styles.logText}>• Stok Servo MG996R diperbarui</Text>
+              <Text style={styles.logText}>• Modul IoT Smart Home dipublikasikan</Text>
+            </>
+          )}
         </View>
       </ScrollView>
     </View>

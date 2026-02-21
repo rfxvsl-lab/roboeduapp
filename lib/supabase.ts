@@ -115,6 +115,22 @@ export const getCourseById = async (courseId: string) => {
   return data;
 };
 
+// Tambah atau Update Kursus
+export const upsertCourse = async (course: any) => {
+  const { data, error } = await supabase
+    .from('courses')
+    .upsert([course])
+    .select();
+  if (error) throw error;
+  return data[0];
+};
+
+// Hapus Kursus
+export const deleteCourse = async (id: string) => {
+  const { error } = await supabase.from('courses').delete().eq('id', id);
+  if (error) throw error;
+};
+
 // --- HARDWARE FUNCTIONS ---
 
 // Mengambil semua hardware
@@ -137,6 +153,22 @@ export const getHardwareById = async (hardwareId: string) => {
   return data;
 };
 
+// Tambah atau Update Hardware
+export const upsertHardware = async (item: any) => {
+  const { data, error } = await supabase
+    .from('hardware')
+    .upsert([item])
+    .select();
+  if (error) throw error;
+  return data[0];
+};
+
+// Hapus Hardware
+export const deleteHardware = async (id: string) => {
+  const { error } = await supabase.from('hardware').delete().eq('id', id);
+  if (error) throw error;
+};
+
 // --- ADMIN PANEL FUNCTIONS ---
 
 // Mengambil jumlah total user
@@ -146,6 +178,22 @@ export const getUsersCount = async () => {
     .select('*', { count: 'exact', head: true });
   if (error) throw error;
   return count;
+};
+
+// Mengambil semua user profiles
+export const getAllUsers = async () => {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+
+// Update Role User
+export const updateUserRole = async (userId: string, role: string) => {
+  const { error } = await supabase.from('user_profiles').update({ role }).eq('user_id', userId);
+  if (error) throw error;
 };
 
 // Mengambil jumlah total kursus
