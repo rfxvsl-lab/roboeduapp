@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createUser, loginUser } from '../lib/appwrite';
 import { useAuth } from '../context/AuthContext';
 
@@ -29,6 +30,18 @@ export default function RegisterScreen() {
       await createUser(email, password, name);
       // Auto login setelah daftar
       await loginUser(email, password);
+
+      // Simpan data awal ke database lokal (AsyncStorage) agar langsung muncul di Profile
+      const initialProfile = {
+        name: name,
+        email: email,
+        bio: 'Robotic Enthusiast',
+        institution: 'RoboEdu Academy',
+        phone: '',
+        github: ''
+      };
+      await AsyncStorage.setItem('@user_profile', JSON.stringify(initialProfile));
+
       login(); // Update state global
       
       router.replace({ pathname: '/(tabs)/profile', params: { firstLogin: 'true' } });

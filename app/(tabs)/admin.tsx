@@ -1,0 +1,64 @@
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+export default function AdminPanel() {
+  return (
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.headerCard}>
+          <Ionicons name="settings" size={40} color="#f59e0b" />
+          <Text style={styles.title}>Admin <Text style={{color:'#f59e0b'}}>Control Center</Text></Text>
+          <Text style={styles.subtitle}>Kelola konten dan ekosistem RoboEdu Studio</Text>
+        </View>
+
+        <View style={styles.grid}>
+          <AdminCard icon="book" title="Kelola Modul" count="12" color="#3b82f6" />
+          <AdminCard icon="hardware-chip" title="Hardware" count="45" color="#10b981" />
+          <AdminCard icon="people" title="Siswa Aktif" count="1.2k" color="#8b5cf6" />
+          <AdminCard icon="chatbubble-ellipses" title="Tiket Bantuan" count="5" color="#ef4444" />
+        </View>
+
+        <TouchableOpacity style={styles.mainAction}>
+          <Ionicons name="add-circle" size={24} color="#020617" />
+          <Text style={styles.mainActionText}>TAMBAH MODUL BARU</Text>
+        </TouchableOpacity>
+
+        <View style={styles.recentSection}>
+          <Text style={styles.sectionTitle}>Aktivitas Terbaru</Text>
+          <Text style={styles.logText}>• User 'Budi' menyelesaikan kuis Arduino</Text>
+          <Text style={styles.logText}>• Stok Servo MG996R diperbarui</Text>
+          <Text style={styles.logText}>• Modul IoT Smart Home dipublikasikan</Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const AdminCard = ({ icon, title, count, color }: any) => (
+  <TouchableOpacity style={styles.card}>
+    <View style={[styles.iconBox, { backgroundColor: color + '20' }]}>
+      <Ionicons name={icon} size={24} color={color} />
+    </View>
+    <Text style={styles.cardCount}>{count}</Text>
+    <Text style={styles.cardTitle}>{title}</Text>
+  </TouchableOpacity>
+);
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#020617' },
+  content: { padding: 20 },
+  headerCard: { backgroundColor: '#0f172a', padding: 30, borderRadius: 25, alignItems: 'center', marginBottom: 25, borderWidth: 1, borderColor: '#1e293b' },
+  title: { color: 'white', fontSize: 22, fontWeight: '900', marginTop: 15, fontFamily: 'Orbitron_700Bold' },
+  subtitle: { color: '#94a3b8', fontSize: 12, marginTop: 5, textAlign: 'center' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 15 },
+  card: { backgroundColor: '#0f172a', width: '47%', padding: 20, borderRadius: 20, borderWidth: 1, borderColor: '#1e293b' },
+  iconBox: { width: 45, height: 45, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
+  cardCount: { color: 'white', fontSize: 20, fontWeight: 'bold' },
+  cardTitle: { color: '#94a3b8', fontSize: 12, marginTop: 4 },
+  mainAction: { backgroundColor: '#f59e0b', flexDirection: 'row', padding: 18, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginTop: 25 },
+  mainActionText: { color: '#020617', fontWeight: 'bold', marginLeft: 10, letterSpacing: 1 },
+  recentSection: { marginTop: 30, backgroundColor: '#0f172a', padding: 20, borderRadius: 20 },
+  sectionTitle: { color: 'white', fontWeight: 'bold', marginBottom: 15 },
+  logText: { color: '#64748b', fontSize: 12, marginBottom: 10, fontFamily: 'monospace' }
+});

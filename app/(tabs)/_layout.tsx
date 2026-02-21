@@ -1,11 +1,29 @@
-import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity, Text } from 'react-native';
+import { Tabs, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Text, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
+import { account } from '../../lib/appwrite';
 
 export default function TabLayout() {
   const { isLoggedIn } = useAuth();
   const router = useRouter();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const user = await account.get();
+        // Cek apakah email adalah email admin
+        setIsAdmin(user.email === 'hilal.alhamdi22@gmail.com');
+      } catch (e) {
+        setIsAdmin(false);
+      }
+    };
+
+    if (isLoggedIn) checkAdminStatus();
+    else setIsAdmin(false);
+  }, [isLoggedIn]);
 
   return (
     <Tabs screenOptions={{ 
@@ -35,6 +53,15 @@ export default function TabLayout() {
         title: 'Studio', 
         tabBarIcon: ({color}) => <Ionicons name="game-controller" size={24} color={color} /> 
       }} />
+      <Tabs.Screen 
+        name="admin" 
+        options={{ 
+          title: 'Admin', 
+          // Sembunyikan tab jika bukan admin
+          href: isAdmin ? '/admin' : null,
+          tabBarIcon: ({color}) => <Ionicons name="shield-checkmark" size={24} color={color} /> 
+        }} 
+      />
       <Tabs.Screen name="profile" options={{ 
         title: 'Profile', 
         tabBarIcon: ({color}) => <Ionicons name="person" size={24} color={color} /> 

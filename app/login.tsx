@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 // app/index.tsx
-import { Redirect } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
-import { loginUser } from '../lib/appwrite';
+import { account, loginUser } from '../lib/appwrite';
 
 
 export default function LoginScreen() {
@@ -23,7 +23,20 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       await loginUser(email, password);
-      login(); 
+      
+      // Ambil data user lengkap untuk cek email admin
+      const user = await account.get();
+      const profileData = {
+        name: user.name,
+        email: user.email,
+        bio: 'Robotic Enthusiast',
+        institution: 'RoboEdu Academy',
+        phone: '',
+        github: ''
+      };
+      await AsyncStorage.setItem('@user_profile', JSON.stringify(profileData));
+
+      login(); // Update state global
       router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert('Login Gagal', error.message);
@@ -36,7 +49,7 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <Text style={styles.logo}>ROBOEDU<Text style={{color:'#f59e0b'}}> STUDIO</Text></Text>
       <View style={styles.inputCard}>
-        <Text style={styles.label}>Admin Access</Text>
+        <Text style={styles.label}>Masuk ke Akun Anda</Text>
         <TextInput 
           placeholder="Email" 
           placeholderTextColor="#94a3b8"

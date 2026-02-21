@@ -5,6 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { COURSES } from '../../constants/CoursesData';
 import { useAuth } from '../../context/AuthContext';
+import { account } from '../../lib/appwrite';
 
 interface UserProfile {
   name: string;
@@ -21,12 +22,12 @@ export default function ProfileScreen() {
   const { firstLogin } = useLocalSearchParams();
   
   const [profile, setProfile] = useState<UserProfile>({
-    name: 'Admin RoboEdu',
-    bio: 'Robotic Enthusiast',
-    institution: 'RoboEdu Academy',
-    email: 'admin@roboedu.id',
-    phone: '08123456789',
-    github: 'github.com/roboedu'
+    name: '',
+    bio: '',
+    institution: '',
+    email: '',
+    phone: '',
+    github: ''
   });
   const [isEditing, setIsEditing] = useState(false);
   const [tempProfile, setTempProfile] = useState<UserProfile>(profile);
@@ -43,11 +44,33 @@ export default function ProfileScreen() {
     }
   }, [isLoggedIn, firstLogin]);
 
+  // Pastikan data edit (tempProfile) terupdate saat profile berhasil dimuat
+  useEffect(() => {
+    setTempProfile(profile);
+  }, [profile]);
+
   const loadProfile = async () => {
     try {
+      // 1. Muat data dari penyimpanan lokal dulu (agar UI cepat muncul)
       const savedProfile = await AsyncStorage.getItem('@user_profile');
-      if (savedProfile) {
-        setProfile(JSON.parse(savedProfile));
+      let currentData = savedProfile ? JSON.parse(savedProfile) : profile;
+      setProfile(currentData);
+
+      // 2. Sinkronkan dengan data asli dari Appwrite (Nama & Email)
+      // Ini memastikan jika user baru daftar, data dari Register langsung masuk sini
+      try {
+        const user = await account.get();
+        if (user) {
+          const updatedProfile = {
+            ...currentData,
+            name: user.name,
+            email: user.email
+          };
+          setProfile(updatedProfile);
+          await AsyncStorage.setItem('@user_profile', JSON.stringify(updatedProfile));
+        }
+      } catch (err) {
+        console.log("Appwrite sync skipped (offline or no session)");
       }
     } catch (e) {
       console.error('Failed to load profile', e);
@@ -85,10 +108,10 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Image source={{ uri: `https://ui-avatars.com/api/?name=${profile.name.replace(' ', '+')}&background=f59e0b&color=fff` }} style={styles.avatar} />
-          <Text style={styles.name}>{profile.name}</Text>
+          <Image source={{ uri: `https://ui-avatars.com/api/?name=${(profile.name || 'User').replace(/\s/g, '+')}&background=f59e0b&color=fff` }} style={styles.avatar} />
+          <Text style={styles.name}>{profile.name || 'User'}</Text>
           <View style={styles.levelBadge}><Text style={styles.levelText}>LVL {currentLevel}</Text></View>
-          <Text style={styles.role}>{profile.bio}</Text>
+          <Text style={styles.role}>{profile.bio || 'Robotic Enthusiast'}</Text>
         </View>
 
         <View style={styles.statsRow}>
@@ -179,6 +202,15 @@ export default function ProfileScreen() {
 
         <View style={styles.menu}>
           <Text style={styles.sectionTitle}>Pengaturan Akun</Text>
+          
+          {profile.email === 'hilal.alhamdi22@gmail.com' && (
+            <TouchableOpacity style={[styles.menuItem, {borderColor: '#f59e0b50'}]} onPress={() => router.push('/admin')}>
+              <Ionicons name="shield-checkmark" size={24} color="#f59e0b" />
+              <Text style={[styles.menuLabel, {color: '#f59e0b'}]}>Panel Kontrol Admin</Text>
+              <Ionicons name="chevron-forward" size={20} color="#f59e0b" />
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity style={styles.menuItem} onPress={() => { setTempProfile(profile); setIsEditing(true); }}>
             <Ionicons name="pencil" size={24} color="#f59e0b" />
             <Text style={styles.menuLabel}>Edit Profil Lengkap</Text>
@@ -187,25 +219,25 @@ export default function ProfileScreen() {
 
           <TouchableOpacity style={styles.menuItem} activeOpacity={1}>
             <Ionicons name="business" size={24} color="#3b82f6" />
-            <Text style={styles.menuLabel}>{profile.institution}</Text>
+            <Text style={styles.menuLabel}>{profile.institution || 'Belum diatur'}</Text>
             <Text style={{color: '#475569', fontSize: 10}}>INSTITUSI</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem} activeOpacity={1}>
             <Ionicons name="mail" size={24} color="#10b981" />
-            <Text style={styles.menuLabel}>{profile.email}</Text>
+            <Text style={styles.menuLabel}>{profile.email || 'Belum diatur'}</Text>
             <Text style={{color: '#475569', fontSize: 10}}>EMAIL</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem} activeOpacity={1}>
             <Ionicons name="call" size={24} color="#8b5cf6" />
-            <Text style={styles.menuLabel}>{profile.phone}</Text>
+            <Text style={styles.menuLabel}>{profile.phone || 'Belum diatur'}</Text>
             <Text style={{color: '#475569', fontSize: 10}}>TELEPON</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem} activeOpacity={1}>
             <Ionicons name="logo-github" size={24} color="white" />
-            <Text style={styles.menuLabel}>{profile.github}</Text>
+            <Text style={styles.menuLabel}>{profile.github || 'Belum diatur'}</Text>
             <Text style={{color: '#475569', fontSize: 10}}>GITHUB</Text>
           </TouchableOpacity>
           
