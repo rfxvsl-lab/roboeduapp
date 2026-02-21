@@ -1,24 +1,36 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 // app/index.tsx
 import { Redirect } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
+import { loginUser } from '../lib/appwrite';
 
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();// Di dalam handleLogin:
   const { login } = useAuth();
-const handleLogin = () => {
-  if (username === 'admin' && password === 'ridho2026') {
-    login(); // Set state global jadi true
-    router.replace('/(tabs)'); // Balik ke home
-  } else {
-    Alert.alert('Error', 'Username atau Password salah!');
-  }
-};
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Email dan Password harus diisi');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await loginUser(email, password);
+      login(); 
+      router.replace('/(tabs)');
+    } catch (error: any) {
+      Alert.alert('Login Gagal', error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -26,10 +38,13 @@ const handleLogin = () => {
       <View style={styles.inputCard}>
         <Text style={styles.label}>Admin Access</Text>
         <TextInput 
-          placeholder="Username" 
+          placeholder="Email" 
           placeholderTextColor="#94a3b8"
           style={styles.input}
-          onChangeText={setUsername}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
         />
         <TextInput 
           placeholder="Password" 
@@ -37,9 +52,22 @@ const handleLogin = () => {
           secureTextEntry
           style={styles.input}
           onChangeText={setPassword}
+          value={password}
         />
-        <TouchableOpacity style={styles.btnLogin} onPress={handleLogin}>
-          <Text style={styles.btnText}>MASUK KE DASHBOARD</Text>
+        <TouchableOpacity 
+          style={[styles.btnLogin, isLoading && { opacity: 0.7 }]} 
+          onPress={handleLogin}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#020617" />
+          ) : (
+            <Text style={styles.btnText}>MASUK KE DASHBOARD</Text>
+          )}
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={{ marginTop: 20, alignItems: 'center' }} onPress={() => router.push('/register')}>
+          <Text style={{ color: '#94a3b8', fontSize: 13 }}>Belum punya akun? <Text style={{ color: '#f59e0b' }}>Daftar</Text></Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -52,3 +52,13 @@ export const createUser = async (email: string, password: string, name: string) 
     throw new Error(error.message || "Failed to create user");
   }
 };
+
+// Fungsi untuk login (membuat sesi)
+export const loginUser = async (email: string, password: string) => {
+  try {
+    const session = await account.createEmailPasswordSession(email, password);
+    return session;
+  } catch (error: any) {
+    throw new Error(error.message || "Login gagal, periksa email dan password");
+  }
+};

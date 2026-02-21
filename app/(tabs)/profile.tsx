@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { COURSES } from '../../constants/CoursesData';
@@ -18,6 +18,7 @@ interface UserProfile {
 export default function ProfileScreen() {
   const { isLoggedIn, logout, enrolledCourses, completedCourses } = useAuth();
   const router = useRouter();
+  const { firstLogin } = useLocalSearchParams();
   
   const [profile, setProfile] = useState<UserProfile>({
     name: 'Admin RoboEdu',
@@ -29,12 +30,18 @@ export default function ProfileScreen() {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [tempProfile, setTempProfile] = useState<UserProfile>(profile);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     if (isLoggedIn) {
       loadProfile();
+      
+      // Cek jika ini pendaftaran baru
+      if (firstLogin === 'true') {
+        setShowWelcome(true);
+      }
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, firstLogin]);
 
   const loadProfile = async () => {
     try {
@@ -281,6 +288,27 @@ export default function ProfileScreen() {
             </View>
           </View>
           </ScrollView>
+        </View>
+      </Modal>
+
+      {/* MODAL WELCOME / LENGKAPI PROFIL */}
+      <Modal visible={showWelcome} transparent animationType="fade">
+        <View style={styles.modalBg}>
+          <View style={styles.modalCard}>
+            <View style={{ backgroundColor: '#f59e0b20', padding: 20, borderRadius: 50, marginBottom: 20 }}>
+              <Ionicons name="sparkles" size={40} color="#f59e0b" />
+            </View>
+            <Text style={styles.modalTitle}>Selamat Datang!</Text>
+            <Text style={[styles.descLocked, { marginBottom: 25 }]}>
+              Akunmu berhasil dibuat. Yuk, lengkapi profilmu agar instruktur bisa mengenalmu lebih baik!
+            </Text>
+            <TouchableOpacity 
+              style={styles.btnSave} 
+              onPress={() => { setShowWelcome(false); setIsEditing(true); }}
+            >
+              <Text style={{ color: '#020617', fontWeight: 'bold', paddingHorizontal: 20 }}>LENGKAPI SEKARANG</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </View>

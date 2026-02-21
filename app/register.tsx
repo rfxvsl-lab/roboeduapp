@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { createUser } from '../lib/appwrite';
+import { createUser, loginUser } from '../lib/appwrite';
+import { useAuth } from '../context/AuthContext';
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState('');
@@ -9,6 +10,7 @@ export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleRegister = async () => {
     // Validasi input
@@ -25,11 +27,11 @@ export default function RegisterScreen() {
     setIsLoading(true);
     try {
       await createUser(email, password, name);
-      Alert.alert(
-        "Sukses", 
-        "Akun ROBOEDU STUDIO berhasil dibuat!",
-        [{ text: "Lanjut ke Login", onPress: () => router.replace('/login') }]
-      );
+      // Auto login setelah daftar
+      await loginUser(email, password);
+      login(); // Update state global
+      
+      router.replace({ pathname: '/(tabs)/profile', params: { firstLogin: 'true' } });
     } catch (error: any) {
       Alert.alert("Gagal", error.message);
     } finally {
