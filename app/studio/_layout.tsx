@@ -7,6 +7,7 @@ export default function StudioLayout() {
       headerTintColor: '#fff',
       headerTitleStyle: { fontWeight: 'bold' },
     }}>
+      <Stack.Screen name="teams" options={{ title: 'Daftar Tim' }} />
       <Stack.Screen name="index" options={{ title: 'RoboEdu Studio' }} />
       <Stack.Screen name="project/[id]" options={{ title: 'Detail Project' }} />
     </Stack>

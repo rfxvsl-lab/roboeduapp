@@ -1,8 +1,10 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext({
   isLoggedIn: false,
-  login: () => {},
+  role: 'user',
+  teamId: null as string | null,
+  login: (role?: string, teamId?: string | null) => {},
   logout: () => {},
   enrolledCourses: [] as string[],
   completedCourses: [] as string[],
@@ -12,13 +14,21 @@ const AuthContext = createContext({
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [role, setRole] = useState('user');
+  const [teamId, setTeamId] = useState<string | null>(null);
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
   const [completedCourses, setCompletedCourses] = useState<string[]>([]);
 
-  const login = () => setIsLoggedIn(true);
+  const login = (userRole: string = 'user', userTeamId: string | null = null) => {
+    setIsLoggedIn(true);
+    setRole(userRole);
+    setTeamId(userTeamId);
+  };
   
   const logout = () => {
     setIsLoggedIn(false);
+    setRole('user');
+    setTeamId(null);
     setEnrolledCourses([]); // Reset kursus saat logout
     setCompletedCourses([]); // Reset status lulus
   };
@@ -36,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, login, logout, enrolledCourses, completedCourses, enrollCourse, completeCourse }}>
+    <AuthContext.Provider value={{ isLoggedIn, role, teamId, login, logout, enrolledCourses, completedCourses, enrollCourse, completeCourse }}>
       {children}
     </AuthContext.Provider>
   );

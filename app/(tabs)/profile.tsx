@@ -20,7 +20,7 @@ interface UserProfile {
 }
 
 export default function ProfileScreen() {
-  const { isLoggedIn, logout, enrolledCourses, completedCourses } = useAuth();
+  const { isLoggedIn, logout, enrolledCourses, completedCourses, role } = useAuth();
   const router = useRouter();
   const { firstLogin } = useLocalSearchParams();
   
@@ -313,11 +313,17 @@ export default function ProfileScreen() {
             <Text style={{color: '#475569', fontSize: 10}}>GITHUB</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/studio')}>
-            <FontAwesome5 name="layer-group" size={20} color="#f59e0b" />
-            <Text style={styles.menuLabel}>Dashboard Studio</Text>
-            <Ionicons name="chevron-forward" size={20} color="#334155" />
-          </TouchableOpacity>
+          {['creator', 'tim_khusus', 'supervisor', 'super_admin'].includes(role) && (
+            <TouchableOpacity 
+              style={styles.menuItem} 
+              onPress={() => 
+                router.push(role === 'super_admin' || role === 'supervisor' ? '/studio/teams' : '/studio')
+              }>
+              <FontAwesome5 name="layer-group" size={20} color="#f59e0b" />
+              <Text style={styles.menuLabel}>Dashboard Studio</Text>
+              <Ionicons name="chevron-forward" size={20} color="#334155" />
+            </TouchableOpacity>
+          )}
           
           <TouchableOpacity style={styles.logout} onPress={logout}>
             <Ionicons name="log-out-outline" size={24} color="#ef4444" />
