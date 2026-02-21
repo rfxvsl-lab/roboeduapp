@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { COURSES } from '../../constants/CoursesData';
 
 export default function ProfileScreen() {
-  const { isLoggedIn, logout, enrolledCourses } = useAuth();
+  const { isLoggedIn, logout, enrolledCourses, completedCourses } = useAuth();
   const router = useRouter();
   
   const [name, setName] = useState('Admin RoboEdu');
@@ -51,21 +51,30 @@ export default function ProfileScreen() {
               <Text style={styles.emptyText}>Belum ada kursus yang diambil.</Text>
             </View>
           ) : (
-            myCourses.map((course) => (
-              <TouchableOpacity 
-                key={course.id} 
-                style={styles.courseCard}
-                onPress={() => router.push({ pathname: '/details/[id]', params: { id: course.id } })}
-              >
-                <Image source={{ uri: course.image }} style={styles.courseImg} />
-                <View style={styles.courseInfo}>
-                  <Text style={styles.courseCat}>{course.category}</Text>
-                  <Text style={styles.courseTitle}>{course.title}</Text>
-                  <Text style={styles.courseProgress}>Terdaftar</Text>
-                </View>
-                <Ionicons name="play-circle" size={30} color="#10b981" />
-              </TouchableOpacity>
-            ))
+            myCourses.map((course) => {
+              // Cek apakah kursus ini sudah diselesaikan (kuis beres)
+              const isCompleted = completedCourses.includes(course.id);
+
+              return (
+                <TouchableOpacity 
+                  key={course.id} 
+                  style={styles.courseCard}
+                  onPress={() => router.push({ pathname: '/details/[id]', params: { id: course.id } })}
+                >
+                  <Image source={{ uri: course.image }} style={styles.courseImg} />
+                  <View style={styles.courseInfo}>
+                    <Text style={styles.courseCat}>{course.category}</Text>
+                    <Text style={styles.courseTitle}>{course.title}</Text>
+                    
+                    {/* Status Progress Dinamis */}
+                    <Text style={[styles.courseProgress, isCompleted && {color: '#f59e0b'}]}>
+                      {isCompleted ? '⭐ LULUS 100%' : '▶ Sedang Belajar'}
+                    </Text>
+                  </View>
+                  <Ionicons name={isCompleted ? "checkmark-circle" : "play-circle"} size={30} color={isCompleted ? "#f59e0b" : "#10b981"} />
+                </TouchableOpacity>
+              );
+            })
           )}
         </View>
 

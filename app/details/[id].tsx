@@ -91,6 +91,19 @@ export default function DetailScreen() {
               <Ionicons name={isEnrolled ? "play-circle" : "lock-closed"} size={24} color={isEnrolled ? "#f59e0b" : "#64748b"} />
             </TouchableOpacity>
           ))}
+
+          {/* TOMBOL UJIAN BARU TAMBAHAN TAHAP 6 */}
+          {isEnrolled && (
+            <TouchableOpacity 
+              style={styles.quizBtn} 
+              activeOpacity={0.8}
+              onPress={() => router.push({ pathname: '/quiz/[id]', params: { id: course.id } })}
+            >
+              <Ionicons name="document-text" size={24} color="#020617" />
+              <Text style={styles.quizBtnText}>Mulai Ujian Akhir Modul</Text>
+            </TouchableOpacity>
+          )}
+
           <View style={{height: 100}} /> 
         </View>
       </ScrollView>
@@ -154,6 +167,8 @@ const styles = StyleSheet.create({
   curriculumNumber: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#1e293b', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   curriculumNumberText: { color: '#f59e0b', fontWeight: 'bold', fontSize: 14 },
   curriculumText: { color: 'white', flex: 1, fontSize: 14, fontWeight: '500' },
+  quizBtn: { backgroundColor: '#f59e0b', padding: 18, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 20 },
+  quizBtnText: { color: '#020617', fontWeight: 'bold', fontSize: 16, marginLeft: 10 },
   bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#0f172a', padding: 20, borderTopWidth: 1, borderTopColor: '#1e293b' },
   btnEnroll: { backgroundColor: '#f59e0b', padding: 18, borderRadius: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   btnText: { color: '#020617', fontWeight: 'bold', fontSize: 16, marginRight: 10 },
