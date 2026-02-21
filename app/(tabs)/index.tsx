@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, StatusBar,
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons'; 
 import { COURSES } from '../../constants/CoursesData';
+import RoboLogo from '../../components/RoboLogo'; // <-- Import Logo SVG kita
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -29,10 +30,12 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
+      
+      {/* HEADER BARU DENGAN LOGO SVG */}
       <View style={styles.header}>
         <View>
           <Text style={styles.welcome}>{greeting}</Text>
-          <Text style={styles.brand}>RoboEdu <Text style={{color: '#f59e0b'}}>Studio</Text></Text>
+          <RoboLogo size={40} showText={true} />
         </View>
         <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(tabs)/profile')}>
           <Image source={{ uri: 'https://ui-avatars.com/api/?name=Admin&background=f59e0b&color=fff' }} style={styles.avatar} />
@@ -116,20 +119,19 @@ const ToolItem = ({ icon, label, color, onPress }: any) => (
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020617' },
-  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a' },
-  welcome: { color: '#94a3b8', fontSize: 14, fontWeight: '500' },
-  brand: { color: 'white', fontSize: 24, fontWeight: '900' },
+  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 15, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', borderBottomWidth: 1, borderBottomColor: '#1e293b' },
+  welcome: { color: '#94a3b8', fontSize: 12, fontWeight: '500', marginBottom: 5 },
   profileBtn: { borderWidth: 2, borderColor: '#f59e0b', borderRadius: 16 },
   avatar: { width: 45, height: 45, borderRadius: 14 },
   content: { padding: 20 },
   progressCard: { backgroundColor: '#1e293b', padding: 22, borderRadius: 24, marginBottom: 30, borderWidth: 1, borderColor: '#334155', elevation: 4 },
   cardTag: { color: '#f59e0b', fontSize: 11, fontWeight: 'bold', marginBottom: 8, letterSpacing: 1 },
-  cardTitle: { color: 'white', fontSize: 20, fontWeight: 'bold', marginBottom: 18 },
+  cardTitle: { color: 'white', fontSize: 20, fontFamily: 'Orbitron_700Bold', marginBottom: 18 }, // <-- Font Baru
   progressBar: { height: 8, backgroundColor: '#0f172a', borderRadius: 10, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: '#f59e0b', borderRadius: 10 },
   progressText: { color: '#94a3b8', fontSize: 12, marginTop: 10, fontWeight: '500' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 15 },
-  sectionTitle: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  sectionTitle: { color: 'white', fontSize: 18, fontFamily: 'Orbitron_700Bold' }, // <-- Font Baru
   seeAll: { color: '#f59e0b', fontSize: 12, fontWeight: 'bold' },
   horizScroll: { marginBottom: 35 },
   modulCard: { width: 240, backgroundColor: '#0f172a', borderRadius: 20, marginRight: 18, overflow: 'hidden', borderWidth: 1, borderColor: '#1e293b' },

@@ -5,12 +5,16 @@ import { useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthProvider } from '../context/AuthContext';
 
-// Tahan Splash Screen agar font sempat dimuat
+// Import Font Orbitron dari Google Fonts
+import { Orbitron_700Bold, Orbitron_900Black } from '@expo-google-fonts/orbitron';
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    ...Ionicons.font, // Memuat font Ionicons
+    ...Ionicons.font,
+    Orbitron_700Bold,
+    Orbitron_900Black,
   });
 
   useEffect(() => {
@@ -28,17 +32,16 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <Stack screenOptions={{ headerShown: false }}>
-        {/* Landing Page utama */}
         <Stack.Screen name="(tabs)" />
-        {/* Halaman Login sebagai Modal */}
         <Stack.Screen 
           name="login" 
           options={{ 
             presentation: 'modal', 
             headerShown: true, 
-            title: 'Login Admin',
+            title: 'Admin Access',
             headerStyle: { backgroundColor: '#0f172a' },
-            headerTintColor: '#fff'
+            headerTintColor: '#f59e0b',
+            headerTitleStyle: { fontFamily: 'Orbitron_700Bold' }
           }} 
         />
       </Stack>
