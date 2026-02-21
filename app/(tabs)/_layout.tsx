@@ -11,7 +11,7 @@ export default function TabLayout() {
     <Tabs screenOptions={{ 
       tabBarStyle: { backgroundColor: '#0f172a', borderTopColor: '#1e293b' },
       tabBarActiveTintColor: '#f59e0b',
-      headerShown: true, // Kita aktifkan header untuk navbar
+      headerShown: true, // Nyalakan header untuk navbar atas
       headerStyle: { backgroundColor: '#0f172a' },
       headerTitleStyle: { color: 'white', fontWeight: 'bold' },
       headerRight: () => !isLoggedIn ? (
@@ -23,9 +23,22 @@ export default function TabLayout() {
         </TouchableOpacity>
       ) : null
     }}>
-      <Tabs.Screen name="index" options={{ title: 'RoboEdu Home', tabBarLabel: 'Home' }} />
-      <Tabs.Screen name="explore" options={{ title: 'Hardware' }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+      <Tabs.Screen name="index" options={{ 
+        title: 'Home', 
+        tabBarIcon: ({color}) => <Ionicons name="home" size={24} color={color} /> 
+      }} />
+      <Tabs.Screen name="explore" options={{ 
+        title: 'Hardware', 
+        tabBarIcon: ({color}) => <Ionicons name="hardware-chip" size={24} color={color} /> 
+      }} />
+      <Tabs.Screen name="studio" options={{ 
+        title: 'Studio', 
+        tabBarIcon: ({color}) => <Ionicons name="game-controller" size={24} color={color} /> 
+      }} />
+      <Tabs.Screen name="profile" options={{ 
+        title: 'Profile', 
+        tabBarIcon: ({color}) => <Ionicons name="person" size={24} color={color} /> 
+      }} />
     </Tabs>
   );
 }

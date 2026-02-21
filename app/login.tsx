@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+// app/index.tsx
+import { Redirect } from 'expo-router';
+import { useAuth } from '../context/AuthContext';
+
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();// Di dalam handleLogin:
+  const { login } = useAuth();
 const handleLogin = () => {
   if (username === 'admin' && password === 'ridho2026') {
     login(); // Set state global jadi true
