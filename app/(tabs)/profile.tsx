@@ -218,7 +218,12 @@ export default function ProfileScreen() {
       </ScrollView>
 
       {/* MODAL EDIT NAMA */}
-      <Modal visible={isEditing} transparent animationType="slide">
+      <Modal 
+        visible={isEditing} 
+        transparent 
+        animationType="slide"
+        aria-modal={true}
+      >
         <View style={styles.modalBg}>
           <ScrollView contentContainerStyle={styles.modalScroll} bounces={false}>
             <View style={styles.modalCard}>
@@ -292,7 +297,12 @@ export default function ProfileScreen() {
       </Modal>
 
       {/* MODAL WELCOME / LENGKAPI PROFIL */}
-      <Modal visible={showWelcome} transparent animationType="fade">
+      <Modal 
+        visible={showWelcome} 
+        transparent 
+        animationType="fade"
+        aria-modal={true}
+      >
         <View style={styles.modalBg}>
           <View style={styles.modalCard}>
             <View style={{ backgroundColor: '#f59e0b20', padding: 20, borderRadius: 50, marginBottom: 20 }}>

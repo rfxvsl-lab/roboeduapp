@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, StatusBar, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons'; 
-import { COURSES } from '../../constants/CoursesData';
+import React, { useEffect, useState } from 'react';
+import { Alert, Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import RoboLogo from '../../components/RoboLogo'; // <-- Import Logo SVG kita
+import { COURSES } from '../../constants/CoursesData';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -130,7 +130,19 @@ const styles = StyleSheet.create({
   profileBtn: { borderWidth: 2, borderColor: '#f59e0b', borderRadius: 16 },
   avatar: { width: 45, height: 45, borderRadius: 14 },
   content: { padding: 20 },
-  progressCard: { backgroundColor: '#1e293b', padding: 22, borderRadius: 24, marginBottom: 30, borderWidth: 1, borderColor: '#334155', elevation: 4 },
+  progressCard: { 
+    backgroundColor: '#1e293b', 
+    padding: 22, 
+    borderRadius: 24, 
+    marginBottom: 30, 
+    borderWidth: 1, 
+    borderColor: '#334155',
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4.65 },
+      android: { elevation: 4 },
+      web: { boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.3)' }
+    })
+  },
   cardTag: { color: '#f59e0b', fontSize: 11, fontWeight: 'bold', marginBottom: 8, letterSpacing: 1 },
   cardTitle: { color: 'white', fontSize: 20, fontFamily: 'Orbitron_700Bold', marginBottom: 18 }, // <-- Font Baru
   progressBar: { height: 8, backgroundColor: '#0f172a', borderRadius: 10, overflow: 'hidden' },
