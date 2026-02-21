@@ -18,8 +18,9 @@ export default function ProfileScreen() {
       <View style={styles.containerCenter}>
         <Ionicons name="lock-closed" size={60} color="#f59e0b" />
         <Text style={styles.titleLocked}>Akses Terkunci</Text>
+        <Text style={styles.descLocked}>Silakan login untuk melihat kelas robotika kamu.</Text>
         <TouchableOpacity style={styles.btnLogin} onPress={() => router.push('/login')}>
-          <Text style={styles.btnText}>LOGIN</Text>
+          <Text style={styles.btnText}>LOGIN SEKARANG</Text>
         </TouchableOpacity>
       </View>
     );
@@ -30,7 +31,6 @@ export default function ProfileScreen() {
     setIsEditing(false);
   };
 
-  // Ambil data kursus lengkap berdasarkan ID yang sudah didaftar
   const myCourses = COURSES.filter(course => enrolledCourses.includes(course.id));
 
   return (
@@ -39,7 +39,7 @@ export default function ProfileScreen() {
         <View style={styles.header}>
           <Image source={{ uri: `https://ui-avatars.com/api/?name=${name.replace(' ', '+')}&background=f59e0b&color=fff` }} style={styles.avatar} />
           <Text style={styles.name}>{name}</Text>
-          <Text style={styles.role}>Robotic Instructor</Text>
+          <Text style={styles.role}>Robotic Enthusiast</Text>
         </View>
 
         <View style={styles.section}>
@@ -61,7 +61,7 @@ export default function ProfileScreen() {
                 <View style={styles.courseInfo}>
                   <Text style={styles.courseCat}>{course.category}</Text>
                   <Text style={styles.courseTitle}>{course.title}</Text>
-                  <Text style={styles.courseProgress}>Progress: 0%</Text>
+                  <Text style={styles.courseProgress}>Terdaftar</Text>
                 </View>
                 <Ionicons name="play-circle" size={30} color="#10b981" />
               </TouchableOpacity>
@@ -112,31 +112,28 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020617' },
   containerCenter: { flex: 1, backgroundColor: '#020617', justifyContent: 'center', alignItems: 'center', padding: 30 },
   titleLocked: { color: 'white', fontSize: 20, fontWeight: 'bold', marginTop: 15 },
+  descLocked: { color: '#94a3b8', textAlign: 'center', marginTop: 10, lineHeight: 20 },
   btnLogin: { backgroundColor: '#f59e0b', padding: 15, borderRadius: 12, width: '100%', alignItems: 'center', marginTop: 25 },
-  btnText: { fontWeight: 'bold' },
+  btnText: { fontWeight: 'bold', color: '#020617' },
   header: { alignItems: 'center', paddingTop: 40, paddingBottom: 30, backgroundColor: '#0f172a', borderBottomWidth: 1, borderBottomColor: '#1e293b' },
   avatar: { width: 100, height: 100, borderRadius: 50, marginBottom: 15, borderWidth: 3, borderColor: '#f59e0b' },
   name: { color: 'white', fontSize: 22, fontWeight: 'bold' },
   role: { color: '#94a3b8', fontSize: 14, marginTop: 5 },
-  
   section: { padding: 20 },
   sectionTitle: { color: 'white', fontSize: 16, fontWeight: 'bold', marginBottom: 15 },
   emptyBox: { alignItems: 'center', padding: 30, backgroundColor: '#0f172a', borderRadius: 20, borderWidth: 1, borderColor: '#1e293b', borderStyle: 'dashed' },
   emptyText: { color: '#94a3b8', marginTop: 10, fontSize: 12 },
-  
   courseCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', padding: 15, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#1e293b' },
   courseImg: { width: 60, height: 60, borderRadius: 12 },
   courseInfo: { flex: 1, marginLeft: 15 },
   courseCat: { color: '#f59e0b', fontSize: 10, fontWeight: 'bold' },
   courseTitle: { color: 'white', fontSize: 14, fontWeight: 'bold', marginTop: 4 },
   courseProgress: { color: '#10b981', fontSize: 11, marginTop: 4 },
-
   menu: { paddingHorizontal: 20 },
   menuItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', padding: 18, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#1e293b' },
   menuLabel: { color: 'white', flex: 1, marginLeft: 15, fontWeight: '500' },
   logout: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10, padding: 15 },
   logoutText: { color: '#ef4444', marginLeft: 10, fontWeight: 'bold' },
-  
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', padding: 20 },
   modalCard: { backgroundColor: '#0f172a', padding: 25, borderRadius: 25, borderWidth: 1, borderColor: '#1e293b' },
   modalTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 15 },

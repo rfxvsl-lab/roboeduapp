@@ -14,7 +14,6 @@ export default function DetailScreen() {
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState('');
   
-  // Cari data kursus berdasarkan ID
   const course = COURSES.find(item => item.id === id);
   const isEnrolled = enrolledCourses.includes(id as string);
 
@@ -33,7 +32,6 @@ export default function DetailScreen() {
     }
     
     if (isEnrolled) {
-      // Jika sudah daftar, langsung scroll ke materi atau play materi pertama
       setShowVideoModal(true);
       setSelectedVideo(course.curriculum[0]);
     } else {
@@ -74,7 +72,7 @@ export default function DetailScreen() {
           </View>
 
           <Text style={styles.title}>{course.title}</Text>
-          <Text style={styles.price}>{isEnrolled ? 'Telah Dibeli' : course.price}</Text>
+          <Text style={styles.price}>{isEnrolled ? 'Telah Terdaftar' : course.price}</Text>
           
           <View style={styles.divider} />
           
@@ -93,13 +91,10 @@ export default function DetailScreen() {
               <Ionicons name={isEnrolled ? "play-circle" : "lock-closed"} size={24} color={isEnrolled ? "#f59e0b" : "#64748b"} />
             </TouchableOpacity>
           ))}
-
-          {/* Spacer agar tidak tertutup sticky button */}
           <View style={{height: 100}} /> 
         </View>
       </ScrollView>
 
-      {/* Sticky Bottom Bar */}
       <View style={styles.bottomBar}>
         <TouchableOpacity style={[styles.btnEnroll, isEnrolled && {backgroundColor: '#10b981'}]} onPress={handleEnroll} activeOpacity={0.8}>
           <Text style={[styles.btnText, isEnrolled && {color: 'white'}]}>{isEnrolled ? 'Lanjutkan Belajar' : 'Daftar Sekarang'}</Text>
@@ -107,21 +102,19 @@ export default function DetailScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Modal Sukses Pendaftaran */}
       <Modal visible={showModal} transparent animationType="fade">
         <View style={styles.modalBg}>
           <View style={styles.modalCard}>
             <Ionicons name="checkmark-circle" size={60} color="#10b981" />
             <Text style={styles.modalTitle}>Berhasil Mendaftar!</Text>
             <Text style={styles.modalDesc}>Kamu telah terdaftar di kelas "{course.title}".</Text>
-            <TouchableOpacity style={styles.btnModal} onPress={() => setShowModal(false)}>
-              <Text style={styles.btnTextModal}>Mulai Belajar</Text>
+            <TouchableOpacity style={styles.btnModal} onPress={() => { setShowModal(false); router.replace('/(tabs)/profile'); }}>
+              <Text style={styles.btnTextModal}>Lihat Profil</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* Modal Simulasi Video Player */}
       <Modal visible={showVideoModal} transparent animationType="slide">
         <View style={styles.videoModalBg}>
           <View style={styles.videoPlayerFrame}>
@@ -129,8 +122,8 @@ export default function DetailScreen() {
               <Ionicons name="close-circle" size={30} color="white" />
             </TouchableOpacity>
             <Ionicons name="play-circle" size={80} color="#f59e0b" style={{opacity: 0.8}} />
-            <Text style={{color:'white', marginTop:15, fontWeight:'bold'}}>{selectedVideo}</Text>
-            <Text style={{color:'#94a3b8', fontSize:12, marginTop:5}}>Memutar Video...</Text>
+            <Text style={{color:'white', marginTop:15, fontWeight:'bold', textAlign: 'center', paddingHorizontal: 20}}>{selectedVideo}</Text>
+            <Text style={{color:'#94a3b8', fontSize:12, marginTop:5}}>Memutar Video Simulasi...</Text>
           </View>
         </View>
       </Modal>
@@ -161,18 +154,15 @@ const styles = StyleSheet.create({
   curriculumNumber: { width: 30, height: 30, borderRadius: 15, backgroundColor: '#1e293b', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   curriculumNumberText: { color: '#f59e0b', fontWeight: 'bold', fontSize: 14 },
   curriculumText: { color: 'white', flex: 1, fontSize: 14, fontWeight: '500' },
-  
   bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#0f172a', padding: 20, borderTopWidth: 1, borderTopColor: '#1e293b' },
   btnEnroll: { backgroundColor: '#f59e0b', padding: 18, borderRadius: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   btnText: { color: '#020617', fontWeight: 'bold', fontSize: 16, marginRight: 10 },
-  
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 20 },
   modalCard: { backgroundColor: '#0f172a', padding: 30, borderRadius: 30, borderWidth: 1, borderColor: '#1e293b', width: '100%', alignItems: 'center' },
   modalTitle: { color: 'white', fontSize: 22, fontWeight: 'bold', marginVertical: 15 },
   modalDesc: { color: '#94a3b8', textAlign: 'center', lineHeight: 22, marginBottom: 25 },
   btnModal: { backgroundColor: '#f59e0b', padding: 15, borderRadius: 12, width: '100%', alignItems: 'center' },
   btnTextModal: { color: '#020617', fontWeight: 'bold', fontSize: 16 },
-
   videoModalBg: { flex: 1, backgroundColor: 'black', justifyContent: 'center', alignItems: 'center' },
   videoPlayerFrame: { width: '100%', height: 250, backgroundColor: '#0f172a', justifyContent: 'center', alignItems: 'center', position: 'relative' },
   closeVideoBtn: { position: 'absolute', top: 15, right: 15, zIndex: 10 }
