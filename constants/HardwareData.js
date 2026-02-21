@@ -1,0 +1,5 @@
+export const HARDWARE_DATA = [
+  { id: '1', name: 'Arduino Uno R3', category: 'Controller', price: 'Rp 120.000', desc: 'Otak utama robotika yang menggunakan mikrokontroler ATmega328P. Sangat cocok untuk pemula yang ingin belajar coding hardware.', image: 'https://cdn.shopify.com/s/files/1/0506/1601/products/A000066_03.front_600x600.jpg' },
+  { id: '2', name: 'Ultrasonic HC-SR04', category: 'Sensor', price: 'Rp 15.000', desc: 'Sensor pengukur jarak berbasis gelombang ultrasonik. Sering digunakan untuk robot penghindar halangan (avoider).', image: 'https://vct.co.id/wp-content/uploads/2020/06/HC-SR04.jpg' },
+  { id: '3', name: 'Servo MG996R', category: 'Actuator', price: 'Rp 55.000', desc: 'Motor penggerak dengan torsi tinggi dan gear metal. Cocok untuk engsel robotic arm atau kaki robot laba-laba.', image: 'https://arduino.com.pk/wp-content/uploads/2018/10/MG996R.jpg' },
+];
