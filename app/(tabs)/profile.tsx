@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { COURSES } from '../../constants/CoursesData';
 import { useAuth } from '../../context/AuthContext';
-import { account } from '../../lib/appwrite';
+import { getUserProfile, supabase } from '../../lib/supabase';
 
 interface UserProfile {
   name: string;
@@ -14,6 +14,7 @@ interface UserProfile {
   email: string;
   phone: string;
   github: string;
+  role?: string;
 }
 
 export default function ProfileScreen() {
@@ -59,13 +60,11 @@ export default function ProfileScreen() {
       // 2. Sinkronkan dengan data asli dari Appwrite (Nama & Email)
       // Ini memastikan jika user baru daftar, data dari Register langsung masuk sini
       try {
-        const user = await account.get();
-        if (user) {
-          const updatedProfile = {
-            ...currentData,
-            name: user.name,
-            email: user.email
-          };
+        const { data: { user } } = await supabase.auth.getUser();
+        const dbProfile = await getUserProfile(user!.id);
+        
+        if (dbProfile) {
+          const updatedProfile = dbProfile as unknown as UserProfile;
           setProfile(updatedProfile);
           await AsyncStorage.setItem('@user_profile', JSON.stringify(updatedProfile));
         }
@@ -92,6 +91,15 @@ export default function ProfileScreen() {
 
   const handleSaveProfile = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Update di Supabase Database
+      const { error } = await supabase
+        .from('user_profiles')
+        .update(tempProfile)
+        .eq('user_id', user!.id);
+      if (error) throw error;
+      
       setProfile(tempProfile);
       await AsyncStorage.setItem('@user_profile', JSON.stringify(tempProfile));
       setIsEditing(false);

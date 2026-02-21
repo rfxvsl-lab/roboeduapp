@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import RoboLogo from '../components/RoboLogo'; // Pastikan path-nya benar
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
 
 export default function BootScreen() {
   const router = useRouter();
+  const { isLoggedIn } = useAuth();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const [logs, setLogs] = useState<string[]>([]);
@@ -38,7 +40,7 @@ export default function BootScreen() {
 
     // 3. Pindah Otomatis ke Dashboard setelah selesai
     setTimeout(() => {
-      router.replace('/(tabs)');
+      router.replace(isLoggedIn ? '/(tabs)' : '/login');
     }, delay + 3000); // Tahan sebentar agar logonya bisa dinikmati
 
   }, []);

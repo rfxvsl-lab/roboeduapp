@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createUser, loginUser } from '../lib/appwrite';
+import { createUser, createUserProfile, loginUser } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 
 export default function RegisterScreen() {
@@ -27,19 +27,12 @@ export default function RegisterScreen() {
 
     setIsLoading(true);
     try {
-      await createUser(email, password, name);
+      const newAccount = await createUser(email, password, name);
       // Auto login setelah daftar
       await loginUser(email, password);
 
-      // Simpan data awal ke database lokal (AsyncStorage) agar langsung muncul di Profile
-      const initialProfile = {
-        name: name,
-        email: email,
-        bio: 'Robotic Enthusiast',
-        institution: 'RoboEdu Academy',
-        phone: '',
-        github: ''
-      };
+      // Buat profil di Supabase Database
+      const initialProfile = await createUserProfile(newAccount!.id, name, email);
       await AsyncStorage.setItem('@user_profile', JSON.stringify(initialProfile));
 
       login(); // Update state global

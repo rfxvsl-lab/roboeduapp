@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 // app/index.tsx
 import { useAuth } from '../context/AuthContext';
-import { account, loginUser } from '../lib/appwrite';
+import { loginUser, supabase } from '../lib/supabase';
 
 
 export default function LoginScreen() {
@@ -25,10 +25,10 @@ export default function LoginScreen() {
       await loginUser(email, password);
       
       // Ambil data user lengkap untuk cek email admin
-      const user = await account.get();
+      const { data: { user } } = await supabase.auth.getUser();
       const profileData = {
-        name: user.name,
-        email: user.email,
+        name: user?.user_metadata.full_name || '',
+        email: user?.email || '',
         bio: 'Robotic Enthusiast',
         institution: 'RoboEdu Academy',
         phone: '',
