@@ -94,6 +94,12 @@ export default function HomeScreen() {
             onPress={() => router.push('/(tabs)/studio')} 
           />
           <ToolItem 
+            icon="chatbubbles" 
+            label="Tanya AI" 
+            color="#f59e0b" 
+            onPress={() => router.push('/chat')} 
+          />
+          <ToolItem 
             icon="code-slash" 
             label="Code Snippets" 
             color="#8b5cf6" 

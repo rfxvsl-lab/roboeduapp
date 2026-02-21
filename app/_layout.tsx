@@ -44,6 +44,16 @@ export default function RootLayout() {
             headerTitleStyle: { fontFamily: 'Orbitron_700Bold' }
           }} 
         />
+        <Stack.Screen 
+          name="register" 
+          options={{ 
+            headerShown: true, 
+            title: 'Daftar Akun',
+            headerStyle: { backgroundColor: '#0f172a' },
+            headerTintColor: '#f59e0b',
+            headerTitleStyle: { fontFamily: 'Orbitron_700Bold', fontSize: 16 }
+          }} 
+        />
         {/* TAMBAHAN TAHAP 7: Halaman Chat Instruktur */}
         <Stack.Screen 
           name="chat" 

@@ -1,17 +1,51 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, TextInput, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../context/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { COURSES } from '../../constants/CoursesData';
+import { useAuth } from '../../context/AuthContext';
+
+interface UserProfile {
+  name: string;
+  bio: string;
+  institution: string;
+  email: string;
+  phone: string;
+  github: string;
+}
 
 export default function ProfileScreen() {
   const { isLoggedIn, logout, enrolledCourses, completedCourses } = useAuth();
   const router = useRouter();
   
-  const [name, setName] = useState('Admin RoboEdu');
+  const [profile, setProfile] = useState<UserProfile>({
+    name: 'Admin RoboEdu',
+    bio: 'Robotic Enthusiast',
+    institution: 'RoboEdu Academy',
+    email: 'admin@roboedu.id',
+    phone: '08123456789',
+    github: 'github.com/roboedu'
+  });
   const [isEditing, setIsEditing] = useState(false);
-  const [tempName, setTempName] = useState('');
+  const [tempProfile, setTempProfile] = useState<UserProfile>(profile);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadProfile();
+    }
+  }, [isLoggedIn]);
+
+  const loadProfile = async () => {
+    try {
+      const savedProfile = await AsyncStorage.getItem('@user_profile');
+      if (savedProfile) {
+        setProfile(JSON.parse(savedProfile));
+      }
+    } catch (e) {
+      console.error('Failed to load profile', e);
+    }
+  };
 
   if (!isLoggedIn) {
     return (
@@ -26,20 +60,43 @@ export default function ProfileScreen() {
     );
   }
 
-  const handleSaveName = () => {
-    if(tempName.trim().length > 0) setName(tempName);
-    setIsEditing(false);
+  const handleSaveProfile = async () => {
+    try {
+      setProfile(tempProfile);
+      await AsyncStorage.setItem('@user_profile', JSON.stringify(tempProfile));
+      setIsEditing(false);
+    } catch (e) {
+      console.error('Failed to save profile', e);
+    }
   };
 
   const myCourses = COURSES.filter(course => enrolledCourses.includes(course.id));
+  const totalXP = completedCourses.length * 100;
+  const currentLevel = Math.floor(totalXP / 300) + 1;
 
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Image source={{ uri: `https://ui-avatars.com/api/?name=${name.replace(' ', '+')}&background=f59e0b&color=fff` }} style={styles.avatar} />
-          <Text style={styles.name}>{name}</Text>
-          <Text style={styles.role}>Robotic Enthusiast</Text>
+          <Image source={{ uri: `https://ui-avatars.com/api/?name=${profile.name.replace(' ', '+')}&background=f59e0b&color=fff` }} style={styles.avatar} />
+          <Text style={styles.name}>{profile.name}</Text>
+          <View style={styles.levelBadge}><Text style={styles.levelText}>LVL {currentLevel}</Text></View>
+          <Text style={styles.role}>{profile.bio}</Text>
+        </View>
+
+        <View style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{enrolledCourses.length}</Text>
+            <Text style={styles.statLabel}>Kursus</Text>
+          </View>
+          <View style={[styles.statItem, { borderLeftWidth: 1, borderRightWidth: 1, borderColor: '#1e293b' }]}>
+            <Text style={styles.statValue}>{completedCourses.length}</Text>
+            <Text style={styles.statLabel}>Selesai</Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>{totalXP}</Text>
+            <Text style={styles.statLabel}>XP</Text>
+          </View>
         </View>
 
         <View style={styles.section}>
@@ -78,12 +135,71 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        {completedCourses.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Sertifikat Kelulusan</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {completedCourses.map(courseId => {
+                const course = COURSES.find(c => c.id === courseId);
+                return (
+                  <TouchableOpacity key={courseId} style={styles.certCard}>
+                    <Ionicons name="ribbon" size={30} color="#f59e0b" />
+                    <Text style={styles.certText} numberOfLines={1}>{course?.title}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Pencapaian (Badges)</Text>
+          <View style={styles.badgeContainer}>
+            <View style={[styles.badge, enrolledCourses.length > 0 && styles.badgeActive]}>
+              <Ionicons name="rocket" size={24} color={enrolledCourses.length > 0 ? "#f59e0b" : "#334155"} />
+              <Text style={styles.badgeText}>Pemula</Text>
+            </View>
+            <View style={[styles.badge, completedCourses.length > 0 && styles.badgeActive]}>
+              <Ionicons name="ribbon" size={24} color={completedCourses.length > 0 ? "#f59e0b" : "#334155"} />
+              <Text style={styles.badgeText}>Lulusan</Text>
+            </View>
+            <View style={[styles.badge, completedCourses.length >= 3 && styles.badgeActive]}>
+              <Ionicons name="trophy" size={24} color={completedCourses.length >= 3 ? "#f59e0b" : "#334155"} />
+              <Text style={styles.badgeText}>Master</Text>
+            </View>
+          </View>
+        </View>
+
         <View style={styles.menu}>
           <Text style={styles.sectionTitle}>Pengaturan Akun</Text>
-          <TouchableOpacity style={styles.menuItem} onPress={() => { setTempName(name); setIsEditing(true); }}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => { setTempProfile(profile); setIsEditing(true); }}>
             <Ionicons name="pencil" size={24} color="#f59e0b" />
-            <Text style={styles.menuLabel}>Edit Nama Profil</Text>
+            <Text style={styles.menuLabel}>Edit Profil Lengkap</Text>
             <Ionicons name="chevron-forward" size={20} color="#334155" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} activeOpacity={1}>
+            <Ionicons name="business" size={24} color="#3b82f6" />
+            <Text style={styles.menuLabel}>{profile.institution}</Text>
+            <Text style={{color: '#475569', fontSize: 10}}>INSTITUSI</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} activeOpacity={1}>
+            <Ionicons name="mail" size={24} color="#10b981" />
+            <Text style={styles.menuLabel}>{profile.email}</Text>
+            <Text style={{color: '#475569', fontSize: 10}}>EMAIL</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} activeOpacity={1}>
+            <Ionicons name="call" size={24} color="#8b5cf6" />
+            <Text style={styles.menuLabel}>{profile.phone}</Text>
+            <Text style={{color: '#475569', fontSize: 10}}>TELEPON</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem} activeOpacity={1}>
+            <Ionicons name="logo-github" size={24} color="white" />
+            <Text style={styles.menuLabel}>{profile.github}</Text>
+            <Text style={{color: '#475569', fontSize: 10}}>GITHUB</Text>
           </TouchableOpacity>
           
           <TouchableOpacity style={styles.logout} onPress={logout}>
@@ -97,20 +213,74 @@ export default function ProfileScreen() {
       {/* MODAL EDIT NAMA */}
       <Modal visible={isEditing} transparent animationType="slide">
         <View style={styles.modalBg}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Ubah Nama</Text>
+          <ScrollView contentContainerStyle={styles.modalScroll} bounces={false}>
+            <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Lengkapi Profil</Text>
+            
+            <Text style={styles.inputLabel}>Nama Lengkap</Text>
             <TextInput 
               style={styles.modalInput}
-              value={tempName}
-              onChangeText={setTempName}
-              placeholder="Masukkan nama baru..."
+              value={tempProfile.name}
+              onChangeText={(val) => setTempProfile({...tempProfile, name: val})}
+              placeholder="Nama Lengkap"
               placeholderTextColor="#94a3b8"
             />
+
+            <Text style={styles.inputLabel}>Bio / Motto</Text>
+            <TextInput 
+              style={styles.modalInput}
+              value={tempProfile.bio}
+              onChangeText={(val) => setTempProfile({...tempProfile, bio: val})}
+              placeholder="Contoh: Robotic Enthusiast"
+              placeholderTextColor="#94a3b8"
+            />
+
+            <Text style={styles.inputLabel}>Institusi / Sekolah</Text>
+            <TextInput 
+              style={styles.modalInput}
+              value={tempProfile.institution}
+              onChangeText={(val) => setTempProfile({...tempProfile, institution: val})}
+              placeholder="Nama Sekolah atau Kampus"
+              placeholderTextColor="#94a3b8"
+            />
+
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput 
+              style={styles.modalInput}
+              value={tempProfile.email}
+              onChangeText={(val) => setTempProfile({...tempProfile, email: val})}
+              placeholder="email@contoh.com"
+              placeholderTextColor="#94a3b8"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <Text style={styles.inputLabel}>Nomor Telepon</Text>
+            <TextInput 
+              style={styles.modalInput}
+              value={tempProfile.phone}
+              onChangeText={(val) => setTempProfile({...tempProfile, phone: val})}
+              placeholder="0812..."
+              placeholderTextColor="#94a3b8"
+              keyboardType="phone-pad"
+            />
+
+            <Text style={styles.inputLabel}>Username Github</Text>
+            <TextInput 
+              style={styles.modalInput}
+              value={tempProfile.github}
+              onChangeText={(val) => setTempProfile({...tempProfile, github: val})}
+              placeholder="github.com/username"
+              placeholderTextColor="#94a3b8"
+              autoCapitalize="none"
+            />
+
             <View style={styles.modalBtns}>
               <TouchableOpacity onPress={() => setIsEditing(false)} style={styles.btnCancel}><Text style={{color:'white'}}>Batal</Text></TouchableOpacity>
-              <TouchableOpacity onPress={handleSaveName} style={styles.btnSave}><Text style={{color:'#020617', fontWeight:'bold'}}>Simpan</Text></TouchableOpacity>
+              <TouchableOpacity onPress={handleSaveProfile} style={styles.btnSave}><Text style={{color:'#020617', fontWeight:'bold'}}>Simpan Perubahan</Text></TouchableOpacity>
             </View>
           </View>
+          </ScrollView>
         </View>
       </Modal>
     </View>
@@ -128,6 +298,12 @@ const styles = StyleSheet.create({
   avatar: { width: 100, height: 100, borderRadius: 50, marginBottom: 15, borderWidth: 3, borderColor: '#f59e0b' },
   name: { color: 'white', fontSize: 22, fontWeight: 'bold' },
   role: { color: '#94a3b8', fontSize: 14, marginTop: 5 },
+  levelBadge: { backgroundColor: '#f59e0b', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 5, marginTop: 5 },
+  levelText: { color: '#020617', fontSize: 10, fontWeight: 'bold' },
+  statsRow: { flexDirection: 'row', backgroundColor: '#0f172a', paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: '#1e293b' },
+  statItem: { flex: 1, alignItems: 'center' },
+  statValue: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  statLabel: { color: '#64748b', fontSize: 12, marginTop: 4 },
   section: { padding: 20 },
   sectionTitle: { color: 'white', fontSize: 16, fontWeight: 'bold', marginBottom: 15 },
   emptyBox: { alignItems: 'center', padding: 30, backgroundColor: '#0f172a', borderRadius: 20, borderWidth: 1, borderColor: '#1e293b', borderStyle: 'dashed' },
@@ -138,16 +314,24 @@ const styles = StyleSheet.create({
   courseCat: { color: '#f59e0b', fontSize: 10, fontWeight: 'bold' },
   courseTitle: { color: 'white', fontSize: 14, fontWeight: 'bold', marginTop: 4 },
   courseProgress: { color: '#10b981', fontSize: 11, marginTop: 4 },
+  badgeContainer: { flexDirection: 'row', gap: 15 },
+  badge: { flex: 1, backgroundColor: '#0f172a', padding: 15, borderRadius: 20, alignItems: 'center', borderWidth: 1, borderColor: '#1e293b' },
+  badgeActive: { borderColor: '#f59e0b30', backgroundColor: '#f59e0b05' },
+  badgeText: { color: '#64748b', fontSize: 10, marginTop: 8, fontWeight: 'bold' },
   menu: { paddingHorizontal: 20 },
   menuItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#0f172a', padding: 18, borderRadius: 20, marginBottom: 15, borderWidth: 1, borderColor: '#1e293b' },
   menuLabel: { color: 'white', flex: 1, marginLeft: 15, fontWeight: '500' },
   logout: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 10, padding: 15 },
   logoutText: { color: '#ef4444', marginLeft: 10, fontWeight: 'bold' },
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', padding: 20 },
+  modalScroll: { flexGrow: 1, justifyContent: 'center' },
   modalCard: { backgroundColor: '#0f172a', padding: 25, borderRadius: 25, borderWidth: 1, borderColor: '#1e293b' },
-  modalTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
-  modalInput: { backgroundColor: '#1e293b', color: 'white', padding: 15, borderRadius: 12, marginBottom: 20 },
+  modalTitle: { color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 20 },
+  inputLabel: { color: '#f59e0b', fontSize: 11, fontWeight: 'bold', marginBottom: 8, marginLeft: 4 },
+  modalInput: { backgroundColor: '#1e293b', color: 'white', padding: 15, borderRadius: 12, marginBottom: 15 },
   modalBtns: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },
   btnCancel: { padding: 12, paddingHorizontal: 20 },
-  btnSave: { backgroundColor: '#f59e0b', padding: 12, paddingHorizontal: 25, borderRadius: 10 }
+  btnSave: { backgroundColor: '#f59e0b', padding: 12, paddingHorizontal: 25, borderRadius: 10 },
+  certCard: { backgroundColor: '#1e293b', padding: 15, borderRadius: 15, marginRight: 10, alignItems: 'center', width: 120, borderWidth: 1, borderColor: '#f59e0b40' },
+  certText: { color: 'white', fontSize: 10, marginTop: 8, textAlign: 'center', fontWeight: 'bold' }
 });

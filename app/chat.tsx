@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React, { useRef, useState } from 'react';
+import { FlatList, Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface Message {
   id: string;
@@ -11,10 +11,11 @@ interface Message {
 
 export default function ChatScreen() {
   const [inputText, setInputText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: '1', text: 'Halo! Saya Instruktur RoboEdu. Ada materi yang bikin kamu bingung?', sender: 'instructor', time: '10:00' }
   ]);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   const sendMessage = () => {
     if (inputText.trim() === '') return;
@@ -28,24 +29,20 @@ export default function ChatScreen() {
 
     setMessages(prev => [...prev, newUserMsg]);
     setInputText('');
+    setIsTyping(true);
 
-    // Simulasi balasan instruktur (Bot)
+    // TODO: Ganti dengan fetch ke API Gemini/OpenAI
     setTimeout(() => {
-      const botReplies = [
-        'Pertanyaan bagus! Untuk komponen itu, pastikan tegangan yang masuk adalah 5V agar tidak terbakar.',
-        'Coba cek kembali koneksi pin TX dan RX-nya, biasanya terbalik.',
-        'Sip! Lanjutkan ke Modul 2, di sana kita akan bahas ini lebih detail.',
-        'Kalau masih error, pastikan library di Arduino IDE sudah ter-install dengan benar ya.'
-      ];
-      const randomReply = botReplies[Math.floor(Math.random() * botReplies.length)];
+      const replyText = "Saya sedang menganalisis pertanyaanmu tentang hardware tersebut...";
       
       const newBotMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: randomReply,
+        text: replyText,
         sender: 'instructor',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, newBotMsg]);
+      setIsTyping(false);
     }, 1500);
   };
 
@@ -55,19 +52,20 @@ export default function ChatScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={90}
     >
-      <ScrollView 
-        style={styles.chatArea} 
-        ref={scrollViewRef}
-        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+      <FlatList
+        data={messages}
+        keyExtractor={(item) => item.id}
+        style={styles.chatArea}
+        contentContainerStyle={{ paddingBottom: 20 }}
         showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.warningBox}>
-          <Ionicons name="information-circle" size={16} color="#3b82f6" />
-          <Text style={styles.warningText}>Tanya jawab seputar materi, error code, atau hardware.</Text>
-        </View>
-
-        {messages.map((msg) => (
-          <View key={msg.id} style={[styles.messageWrapper, msg.sender === 'user' ? styles.wrapperUser : styles.wrapperBot]}>
+        ListHeaderComponent={
+          <View style={styles.warningBox}>
+            <Ionicons name="information-circle" size={16} color="#3b82f6" />
+            <Text style={styles.warningText}>Tanya jawab seputar materi, error code, atau hardware.</Text>
+          </View>
+        }
+        renderItem={({ item: msg }) => (
+          <View style={[styles.messageWrapper, msg.sender === 'user' ? styles.wrapperUser : styles.wrapperBot]}>
             {msg.sender === 'instructor' && (
               <Image source={{ uri: 'https://ui-avatars.com/api/?name=Instruktur&background=3b82f6&color=fff' }} style={styles.avatar} />
             )}
@@ -77,9 +75,16 @@ export default function ChatScreen() {
               <Text style={styles.timeText}>{msg.time}</Text>
             </View>
           </View>
-        ))}
-        <View style={{height: 20}} />
-      </ScrollView>
+        )}
+        ListFooterComponent={isTyping ? (
+          <View style={[styles.messageWrapper, styles.wrapperBot]}>
+            <Image source={{ uri: 'https://ui-avatars.com/api/?name=Instruktur&background=3b82f6&color=fff' }} style={styles.avatar} />
+            <View style={[styles.bubble, styles.bubbleBot]}><Text style={styles.messageText}>Sedang mengetik...</Text></View>
+          </View>
+        ) : null}
+        ref={flatListRef}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+      />
 
       <View style={styles.inputArea}>
         <TextInput 
