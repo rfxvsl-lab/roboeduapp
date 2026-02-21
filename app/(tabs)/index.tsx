@@ -1,13 +1,39 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { Alert, Image, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
+import React, { useEffect, useState, useCallback } from 'react';
+import { ActivityIndicator, Alert, Image, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import RoboLogo from '../../components/RoboLogo'; // <-- Import Logo SVG kita
-import { COURSES } from '../../constants/CoursesData';
+import { getAllCourses } from '../../lib/supabase';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [greeting, setGreeting] = useState('Selamat Datang,');
+  const [profile, setProfile] = useState<any>(null);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
+
+  // Muat profil setiap kali halaman difokuskan agar foto selalu update
+  useFocusEffect(
+    useCallback(() => {
+      const loadProfile = async () => {
+        const saved = await AsyncStorage.getItem('@user_profile');
+        if (saved) setProfile(JSON.parse(saved));
+      };
+      const loadCourses = async () => {
+        setLoadingCourses(true);
+        try {
+          setCourses(await getAllCourses());
+        } catch (error: any) {
+          Alert.alert("Error", "Gagal memuat kursus: " + error.message);
+        } finally {
+          setLoadingCourses(false);
+        }
+      };
+      loadProfile();
+      loadCourses();
+    }, [])
+  );
 
   // Efek Sapaan Dinamis berdasarkan waktu perangkat
   useEffect(() => {
@@ -38,7 +64,10 @@ export default function HomeScreen() {
           <RoboLogo size={40} showText={true} />
         </View>
         <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(tabs)/profile')}>
-          <Image source={{ uri: 'https://ui-avatars.com/api/?name=Admin&background=f59e0b&color=fff' }} style={styles.avatar} />
+          <Image 
+            source={{ uri: profile?.avatar_url || `https://ui-avatars.com/api/?name=${(profile?.name || 'Admin').replace(/\s/g, '+')}&background=f59e0b&color=fff` }} 
+            style={styles.avatar} 
+          />
         </TouchableOpacity>
       </View>
 
@@ -58,26 +87,30 @@ export default function HomeScreen() {
           <TouchableOpacity><Text style={styles.seeAll}>Lihat Semua</Text></TouchableOpacity>
         </View>
         
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizScroll}>
-          {COURSES.map((course) => (
-            <TouchableOpacity 
-              key={course.id} 
-              style={styles.modulCard}
-              activeOpacity={0.8}
-              onPress={() => router.push({ pathname: '/details/[id]', params: { id: course.id } })}
-            >
-              <Image source={{ uri: course.image }} style={styles.modulImg} />
-              <View style={styles.modulInfo}>
-                <Text style={styles.modulCat}>{course.category}</Text>
-                <Text style={styles.modulTitle}>{course.title}</Text>
-                <View style={styles.modulMeta}>
-                  <Ionicons name="bar-chart-outline" size={12} color="#94a3b8" />
-                  <Text style={styles.metaText}>{course.level}</Text>
+        {loadingCourses ? (
+          <ActivityIndicator size="large" color="#f59e0b" style={{ marginVertical: 20 }} />
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizScroll}>
+            {courses.map((course) => (
+              <TouchableOpacity 
+                key={course.id} 
+                style={styles.modulCard}
+                activeOpacity={0.8}
+                onPress={() => router.push({ pathname: '/details/[id]', params: { id: course.id } })}
+              >
+                <Image source={{ uri: course.image_url }} style={styles.modulImg} />
+                <View style={styles.modulInfo}>
+                  <Text style={styles.modulCat}>{course.category}</Text>
+                  <Text style={styles.modulTitle}>{course.title}</Text>
+                  <View style={styles.modulMeta}>
+                    <Ionicons name="bar-chart-outline" size={12} color="#94a3b8" />
+                    <Text style={styles.metaText}>{course.level}</Text>
+                  </View>
                 </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
 
         <Text style={styles.sectionTitle}>Tools & Utilitas</Text>
         <View style={styles.toolsGrid}>
@@ -137,11 +170,9 @@ const styles = StyleSheet.create({
     marginBottom: 30, 
     borderWidth: 1, 
     borderColor: '#334155',
-    ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4.65 },
-      android: { elevation: 4 },
-      web: { boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.3)' }
-    })
+    // Use elevation for Android and boxShadow for Web/iOS to avoid deprecation warnings
+    elevation: 4,
+    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.3)',
   },
   cardTag: { color: '#f59e0b', fontSize: 11, fontWeight: 'bold', marginBottom: 8, letterSpacing: 1 },
   cardTitle: { color: 'white', fontSize: 20, fontFamily: 'Orbitron_700Bold', marginBottom: 18 }, // <-- Font Baru

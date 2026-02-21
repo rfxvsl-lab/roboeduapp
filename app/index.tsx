@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import { useRouter } from 'expo-router';
-import RoboLogo from '../components/RoboLogo'; // Pastikan path-nya benar
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Platform, StyleSheet, Text, View } from 'react-native';
+import RoboLogo from '../components/RoboLogo'; // Pastikan path-nya benar
 import { useAuth } from '../context/AuthContext';
 
 export default function BootScreen() {
@@ -33,14 +33,15 @@ export default function BootScreen() {
     // 2. Animasi Muncul Logo RoboEdu
     setTimeout(() => {
       Animated.parallel([
-        Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-        Animated.spring(scaleAnim, { toValue: 1, friction: 4, useNativeDriver: true })
+        Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: Platform.OS !== 'web' }),
+        Animated.spring(scaleAnim, { toValue: 1, friction: 4, useNativeDriver: Platform.OS !== 'web' })
       ]).start();
     }, delay + 500);
 
     // 3. Pindah Otomatis ke Dashboard setelah selesai
     setTimeout(() => {
-      router.replace(isLoggedIn ? '/(tabs)' : '/login');
+      // Selalu arahkan ke Tabs (Home) sebagai landing page
+      router.replace('/(tabs)');
     }, delay + 3000); // Tahan sebentar agar logonya bisa dinikmati
 
   }, []);

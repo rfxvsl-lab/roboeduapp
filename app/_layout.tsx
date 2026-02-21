@@ -36,22 +36,14 @@ export default function RootLayout() {
         <Stack.Screen 
           name="login" 
           options={{ 
-            presentation: 'modal', 
-            headerShown: true, 
-            title: 'Admin Access',
-            headerStyle: { backgroundColor: '#0f172a' },
-            headerTintColor: '#f59e0b',
-            headerTitleStyle: { fontFamily: 'Orbitron_700Bold' }
+            presentation: 'transparentModal', 
+            headerShown: false, 
           }} 
         />
         <Stack.Screen 
           name="register" 
           options={{ 
-            headerShown: true, 
-            title: 'Daftar Akun',
-            headerStyle: { backgroundColor: '#0f172a' },
-            headerTintColor: '#f59e0b',
-            headerTitleStyle: { fontFamily: 'Orbitron_700Bold', fontSize: 16 }
+            headerShown: false, 
           }} 
         />
         {/* TAMBAHAN TAHAP 7: Halaman Chat Instruktur */}
@@ -61,6 +53,40 @@ export default function RootLayout() {
             presentation: 'card', 
             headerShown: true, 
             title: 'Tanya Instruktur',
+            headerStyle: { backgroundColor: '#0f172a' },
+            headerTintColor: '#f59e0b',
+            headerTitleStyle: { fontFamily: 'Orbitron_700Bold', fontSize: 16 }
+          }} 
+        />
+        {/* Admin Management Screens */}
+        <Stack.Screen 
+          name="(tabs)/admin/courses" 
+          options={{ 
+            presentation: 'card', 
+            headerShown: true, 
+            title: 'Kelola Modul',
+            headerStyle: { backgroundColor: '#0f172a' },
+            headerTintColor: '#f59e0b',
+            headerTitleStyle: { fontFamily: 'Orbitron_700Bold', fontSize: 16 }
+          }} 
+        />
+        <Stack.Screen 
+          name="(tabs)/admin/hardware" 
+          options={{ 
+            presentation: 'card', 
+            headerShown: true, 
+            title: 'Kelola Hardware',
+            headerStyle: { backgroundColor: '#0f172a' },
+            headerTintColor: '#f59e0b',
+            headerTitleStyle: { fontFamily: 'Orbitron_700Bold', fontSize: 16 }
+          }} 
+        />
+        <Stack.Screen 
+          name="(tabs)/admin/users" 
+          options={{ 
+            presentation: 'card', 
+            headerShown: true, 
+            title: 'Kelola Pengguna',
             headerStyle: { backgroundColor: '#0f172a' },
             headerTintColor: '#f59e0b',
             headerTitleStyle: { fontFamily: 'Orbitron_700Bold', fontSize: 16 }

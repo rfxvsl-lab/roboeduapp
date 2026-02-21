@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { COURSES } from '../../constants/CoursesData';
 import { useAuth } from '../../context/AuthContext';
 import { getUserProfile, supabase } from '../../lib/supabase';
@@ -14,6 +15,7 @@ interface UserProfile {
   email: string;
   phone: string;
   github: string;
+  avatar_url?: string;
   role?: string;
 }
 
@@ -28,11 +30,13 @@ export default function ProfileScreen() {
     institution: '',
     email: '',
     phone: '',
-    github: ''
+    github: '',
+    avatar_url: ''
   });
   const [isEditing, setIsEditing] = useState(false);
   const [tempProfile, setTempProfile] = useState<UserProfile>(profile);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -69,10 +73,66 @@ export default function ProfileScreen() {
           await AsyncStorage.setItem('@user_profile', JSON.stringify(updatedProfile));
         }
       } catch (err) {
-        console.log("Appwrite sync skipped (offline or no session)");
+        console.log("Supabase sync skipped (offline or no session)");
       }
     } catch (e) {
       console.error('Failed to load profile', e);
+    }
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert("Izin Ditolak", "Kami butuh izin galeri untuk mengganti foto.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      const asset = result.assets[0];
+      // Validasi ukuran 2MB (2 * 1024 * 1024 bytes)
+      if (asset.fileSize && asset.fileSize > 2097152) {
+        Alert.alert("Ukuran Terlalu Besar", "Maksimal ukuran foto adalah 2MB.");
+        return;
+      }
+      uploadAvatar(asset.uri);
+    }
+  };
+
+  const uploadAvatar = async (uri: string) => {
+    try {
+      setUploading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const fileExt = uri.split('.').pop();
+      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, blob);
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase.from('user_profiles').update({ avatar_url: publicUrl }).eq('user_id', user.id);
+      if (updateError) throw updateError;
+
+      const updatedProfile = { ...profile, avatar_url: publicUrl };
+      setProfile(updatedProfile);
+      await AsyncStorage.setItem('@user_profile', JSON.stringify(updatedProfile));
+      Alert.alert("Sukses", "Foto profil berhasil diperbarui!");
+    } catch (error: any) {
+      Alert.alert("Gagal Upload", error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -116,7 +176,11 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Image source={{ uri: `https://ui-avatars.com/api/?name=${(profile.name || 'User').replace(/\s/g, '+')}&background=f59e0b&color=fff` }} style={styles.avatar} />
+          <TouchableOpacity onPress={pickImage} disabled={uploading}>
+            <Image source={{ uri: profile.avatar_url || `https://ui-avatars.com/api/?name=${(profile.name || 'User').replace(/\s/g, '+')}&background=f59e0b&color=fff` }} style={styles.avatar} />
+            {uploading && <ActivityIndicator style={StyleSheet.absoluteFill} color="#f59e0b" />}
+            <View style={styles.editBadge}><Ionicons name="camera" size={12} color="#020617" /></View>
+          </TouchableOpacity>
           <Text style={styles.name}>{profile.name || 'User'}</Text>
           <View style={styles.levelBadge}><Text style={styles.levelText}>LVL {currentLevel}</Text></View>
           <Text style={styles.role}>{profile.bio || 'Robotic Enthusiast'}</Text>
@@ -374,6 +438,7 @@ const styles = StyleSheet.create({
   btnText: { fontWeight: 'bold', color: '#020617' },
   header: { alignItems: 'center', paddingTop: 40, paddingBottom: 30, backgroundColor: '#0f172a', borderBottomWidth: 1, borderBottomColor: '#1e293b' },
   avatar: { width: 100, height: 100, borderRadius: 50, marginBottom: 15, borderWidth: 3, borderColor: '#f59e0b' },
+  editBadge: { position: 'absolute', bottom: 15, right: 5, backgroundColor: '#f59e0b', padding: 6, borderRadius: 12, borderWidth: 2, borderColor: '#0f172a' },
   name: { color: 'white', fontSize: 22, fontWeight: 'bold' },
   role: { color: '#94a3b8', fontSize: 14, marginTop: 5 },
   levelBadge: { backgroundColor: '#f59e0b', paddingHorizontal: 10, paddingVertical: 2, borderRadius: 5, marginTop: 5 },

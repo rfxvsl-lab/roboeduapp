@@ -1,8 +1,34 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { getCoursesCount, getHardwareCount, getUsersCount } from '../../lib/supabase';
 
 export default function AdminPanel() {
+  const router = useRouter();
+  const [userCount, setUserCount] = useState<number | null>(null);
+  const [courseCount, setCourseCount] = useState<number | null>(null);
+  const [hardwareCount, setHardwareCount] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          setUserCount(await getUsersCount());
+          setCourseCount(await getCoursesCount());
+          setHardwareCount(await getHardwareCount());
+        } catch (error: any) {
+          Alert.alert("Error", "Gagal memuat data admin: " + error.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchData();
+    }, [])
+  );
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -13,19 +39,27 @@ export default function AdminPanel() {
         </View>
 
         <View style={styles.grid}>
-          <AdminCard icon="book" title="Kelola Modul" count="12" color="#3b82f6" />
-          <AdminCard icon="hardware-chip" title="Hardware" count="45" color="#10b981" />
-          <AdminCard icon="people" title="Siswa Aktif" count="1.2k" color="#8b5cf6" />
-          <AdminCard icon="chatbubble-ellipses" title="Tiket Bantuan" count="5" color="#ef4444" />
+          {loading ? (
+            <ActivityIndicator size="large" color="#f59e0b" style={{ flex: 1 }} />
+          ) : (
+            <>
+              <AdminCard icon="book" title="Kelola Modul" count={courseCount} color="#3b82f6" onPress={() => router.push('/admin/courses')} />
+              <AdminCard icon="hardware-chip" title="Hardware" count={hardwareCount} color="#10b981" onPress={() => router.push('/admin/hardware')} />
+              <AdminCard icon="people" title="Siswa Aktif" count={userCount} color="#8b5cf6" onPress={() => router.push('/admin/users')} />
+              <AdminCard icon="chatbubble-ellipses" title="Tiket Bantuan" count="5" color="#ef4444" onPress={() => Alert.alert("Fitur", "Manajemen tiket bantuan belum diimplementasikan.")} />
+            </>
+          )}
         </View>
 
-        <TouchableOpacity style={styles.mainAction}>
+        <TouchableOpacity style={styles.mainAction} onPress={() => router.push('/admin/courses/new')}>
           <Ionicons name="add-circle" size={24} color="#020617" />
           <Text style={styles.mainActionText}>TAMBAH MODUL BARU</Text>
         </TouchableOpacity>
 
         <View style={styles.recentSection}>
           <Text style={styles.sectionTitle}>Aktivitas Terbaru</Text>
+          {/* TODO: Implement dynamic activity logs from Supabase */}
+          {loading ? <ActivityIndicator color="#f59e0b" /> : (
           <Text style={styles.logText}>• User 'Budi' menyelesaikan kuis Arduino</Text>
           <Text style={styles.logText}>• Stok Servo MG996R diperbarui</Text>
           <Text style={styles.logText}>• Modul IoT Smart Home dipublikasikan</Text>
@@ -35,15 +69,16 @@ export default function AdminPanel() {
   );
 }
 
-const AdminCard = ({ icon, title, count, color }: any) => (
-  <TouchableOpacity style={styles.card}>
+const AdminCard = ({ icon, title, count, color, onPress }: { icon: any; title: string; count: number | string | null; color: string; onPress: () => void }) => (
+  <TouchableOpacity style={styles.card} onPress={onPress}>
     <View style={[styles.iconBox, { backgroundColor: color + '20' }]}>
       <Ionicons name={icon} size={24} color={color} />
     </View>
-    <Text style={styles.cardCount}>{count}</Text>
+    <Text style={styles.cardCount}>{count !== null ? count : '-'}</Text>
     <Text style={styles.cardTitle}>{title}</Text>
   </TouchableOpacity>
 );
+
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020617' },

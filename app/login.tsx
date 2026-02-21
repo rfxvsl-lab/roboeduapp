@@ -1,10 +1,11 @@
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 // app/index.tsx
 import { useAuth } from '../context/AuthContext';
-import { loginUser, supabase } from '../lib/supabase';
+import { loginUser, supabase, getUserProfile } from '../lib/supabase';
 
 
 export default function LoginScreen() {
@@ -26,13 +27,16 @@ export default function LoginScreen() {
       
       // Ambil data user lengkap untuk cek email admin
       const { data: { user } } = await supabase.auth.getUser();
+      const dbProfile = await getUserProfile(user!.id).catch(() => null);
+
       const profileData = {
-        name: user?.user_metadata.full_name || '',
-        email: user?.email || '',
-        bio: 'Robotic Enthusiast',
-        institution: 'RoboEdu Academy',
-        phone: '',
-        github: ''
+        name: dbProfile?.name || user?.user_metadata.full_name || '',
+        email: dbProfile?.email || user?.email || '',
+        bio: dbProfile?.bio || 'Robotic Enthusiast',
+        institution: dbProfile?.institution || 'RoboEdu Academy',
+        phone: dbProfile?.phone || '',
+        github: dbProfile?.github || '',
+        avatar_url: dbProfile?.avatar_url || ''
       };
       await AsyncStorage.setItem('@user_profile', JSON.stringify(profileData));
 
@@ -47,6 +51,10 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Tombol Silang untuk menutup modal */}
+      <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
+        <Ionicons name="close" size={28} color="white" />
+      </TouchableOpacity>
       <Text style={styles.logo}>ROBOEDU<Text style={{color:'#f59e0b'}}> STUDIO</Text></Text>
       <View style={styles.inputCard}>
         <Text style={styles.label}>Masuk ke Akun Anda</Text>
@@ -89,6 +97,7 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020617', justifyContent: 'center', padding: 30 },
+  closeBtn: { position: 'absolute', top: 50, right: 20, zIndex: 10, padding: 10 },
   logo: { color: 'white', fontSize: 32, fontWeight: '900', textAlign: 'center', marginBottom: 40 },
   label: { color: '#94a3b8', fontSize: 12, marginBottom: 15, textAlign: 'center', fontWeight: 'bold' },
   inputCard: { backgroundColor: '#0f172a', padding: 25, borderRadius: 25, borderWidth: 1, borderColor: '#1e293b' },
