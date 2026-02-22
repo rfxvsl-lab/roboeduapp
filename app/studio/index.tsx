@@ -1,21 +1,32 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, FlatList, Modal, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
-// DUMMY DATA PROJECT (Mengambil konsep dari web)
-const DUMMY_PROJECTS = [
-  { id: '1', title: 'Video IoT Pemula', status: 'In Progress', progress: 60 },
-  { id: '2', title: 'Modul AI Basic', status: 'Revision', progress: 40 },
-  { id: '3', title: 'Arduino Sensor', status: 'Completed', progress: 100 },
-];
+import React, { useState, useEffect } from 'react';
+import { Alert, FlatList, Modal, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { fetchStudioProjects, createProject } from '../../lib/studioApi';
+import { useAuth } from '../../context/AuthContext';
 
 export default function StudioDashboard() {
   const router = useRouter();
-  const userRole = 'supervisor'; // Dummy role untuk testing UI
+  const { role, teamId } = useAuth();
 
   // State untuk daftar project (dipindahkan ke state agar dinamis)
-  const [projects, setProjects] = useState(DUMMY_PROJECTS);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadProjects();
+  }, [role, teamId]);
+
+  const loadProjects = async () => {
+    setIsLoading(true);
+    const { data, error } = await fetchStudioProjects(teamId, role);
+    if (error) {
+      Alert.alert("Error", "Gagal mengambil data project: " + error);
+    } else {
+      setProjects(data || []);
+    }
+    setIsLoading(false);
+  };
 
   // State untuk Modal dan Form
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -25,23 +36,31 @@ export default function StudioDashboard() {
     deadline: ''
   });
 
-  const handleCreateProject = () => {
+  const handleCreateProject = async () => {
     if (!newProjectForm.title) {
       Alert.alert("Error", "Judul project wajib diisi.");
       return;
     }
 
-    const newProject = {
-      id: (projects.length + 1).toString(),
+    const projectPayload = {
       title: newProjectForm.title,
       status: 'In Progress',
-      progress: 0
+      progress: 0,
+      is_big_project: newProjectForm.isBigProject,
+      deadline: newProjectForm.deadline || null,
+      team_id: teamId,
+      completed_tasks: []
     };
 
-    setProjects([newProject, ...projects]);
-    setIsAddModalOpen(false);
-    setNewProjectForm({ title: '', isBigProject: false, deadline: '' });
-    Alert.alert("Sukses", "Project baru berhasil dibuat!");
+    const { data, error } = await createProject(projectPayload);
+    if (error) {
+      Alert.alert("Gagal", "Gagal membuat project: " + error);
+    } else {
+      setProjects([data, ...projects]);
+      setIsAddModalOpen(false);
+      setNewProjectForm({ title: '', isBigProject: false, deadline: '' });
+      Alert.alert("Sukses", "Project baru berhasil dibuat!");
+    }
   };
 
   // Komponen Kartu Project
@@ -90,7 +109,7 @@ export default function StudioDashboard() {
             <Text style={[styles.addProjectText, { color: '#f59e0b' }]}>Aset</Text>
           </TouchableOpacity>
           
-          {userRole === 'supervisor' && (
+          {(role === 'supervisor' || role === 'super_admin') && (
             <TouchableOpacity 
               style={styles.addProjectBtn} 
               onPress={() => setIsAddModalOpen(true)}
@@ -102,13 +121,17 @@ export default function StudioDashboard() {
         </View>
       </View>
       
-      <FlatList
-        data={projects}
-        keyExtractor={(item) => item.id}
-        renderItem={renderProjectCard}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-      />
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#f59e0b" style={{ marginTop: 50 }} />
+      ) : (
+        <FlatList
+          data={projects}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderProjectCard}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
       {/* Modal Tambah Project */}
       <Modal

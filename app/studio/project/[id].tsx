@@ -1,46 +1,80 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { ALL_TASK_IDS, WORKFLOW_STEPS, DUMMY_PROJECTS } from '../../../constants/StudioData';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ALL_TASK_IDS, WORKFLOW_STEPS } from '../../../constants/StudioData';
+import { useAuth } from '../../../context/AuthContext';
+import { fetchProjectById, updateProject } from '../../../lib/studioApi';
 
 export default function ProjectDetail() {
   const { id } = useLocalSearchParams();
-  const activeProject = DUMMY_PROJECTS.find(p => p.id === id) || DUMMY_PROJECTS[0];
+  const { role } = useAuth();
   
-  // DUMMY STATE: Ganti menjadi 'creator' atau 'supervisor' untuk mengetes perubahan UI
-  const userRole = 'supervisor'; 
-
   // State simulasi data project aktif
-  const [completedTasks, setCompletedTasks] = useState<string[]>(activeProject.completedTasks || []);
-  const [isApproved, setIsApproved] = useState(activeProject.isApproved || false);
-  const [previewLink, setPreviewLink] = useState(activeProject.previewLink || '');
+  const [activeProject, setActiveProject] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
+  const [isApproved, setIsApproved] = useState(false);
+  const [previewLink, setPreviewLink] = useState('');
   const [deadline, setDeadline] = useState('2024-12-25');
-  const [script, setScript] = useState(activeProject.script || '');
-  const [equipment, setEquipment] = useState(activeProject.equipment || '');
-  const [proposalStatus, setProposalStatus] = useState(activeProject.proposalStatus || 'None'); 
+  const [script, setScript] = useState('');
+  const [equipment, setEquipment] = useState('');
+  const [proposalStatus, setProposalStatus] = useState('None'); 
   const [finalGDriveLink, setFinalGDriveLink] = useState('');
-  const [finalLink, setFinalLink] = useState(activeProject.finalLink || '');
-  const [projectStatus, setProjectStatus] = useState(activeProject.status || 'In Progress');
+  const [finalLink, setFinalLink] = useState('');
+  const [projectStatus, setProjectStatus] = useState('In Progress');
   const [feedback, setFeedback] = useState('');
   const [feedbackInput, setFeedbackInput] = useState('');
 
-  const handleApproval = (approved: boolean) => {
-    setIsApproved(approved);
-    if (approved) {
-      setFeedback('');
-      Alert.alert("Sukses", "Preview di-Approve! Step 5 sekarang terbuka.");
-    } else {
-      setFeedback(feedbackInput);
-      Alert.alert("Revisi", "Catatan revisi telah dikirim ke tim!");
+  useEffect(() => {
+    loadProject();
+  }, [id]);
+
+  const loadProject = async () => {
+    setIsLoading(true);
+    const { data, error } = await fetchProjectById(id as string);
+    if (data) {
+      setActiveProject(data);
+      setCompletedTasks(data.completed_tasks || []);
+      setIsApproved(data.is_approved || false);
+      setPreviewLink(data.preview_link || '');
+      setScript(data.script || '');
+      setEquipment(data.equipment || '');
+      setProposalStatus(data.proposal_status || 'None');
+      setFinalLink(data.final_link || '');
+      setProjectStatus(data.status || 'In Progress');
+      setFeedback(data.feedback || '');
+    }
+    setIsLoading(false);
+  };
+
+  const handleApproval = async (approved: boolean) => {
+    const updateData = {
+      is_approved: approved,
+      feedback: approved ? '' : feedbackInput
+    };
+    
+    const { error } = await updateProject(id as string, updateData);
+    if (!error) {
+      setIsApproved(approved);
+      if (approved) {
+        setFeedback('');
+        Alert.alert("Sukses", "Preview di-Approve! Step 5 sekarang terbuka.");
+      } else {
+        setFeedback(feedbackInput);
+        Alert.alert("Revisi", "Catatan revisi telah dikirim ke tim!");
+      }
     }
   };
 
-  const handleSubmitPreview = () => {
-    Alert.alert("Sukses", "Link Preview berhasil dikirim ke Supervisor.");
+  const handleSubmitPreview = async () => {
+    const { error } = await updateProject(id as string, { preview_link: previewLink });
+    if (!error) {
+      Alert.alert("Sukses", "Link Preview berhasil dikirim ke Supervisor.");
+    }
   };
 
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
     if (!finalLink) {
       Alert.alert("Error", "Masukkan link final terlebih dahulu.");
       return;
@@ -52,10 +86,17 @@ export default function ProjectDetail() {
         { text: "Batal", style: "cancel" },
         { 
           text: "Ya, Selesai", 
-          onPress: () => {
-            setProjectStatus('Completed');
-            setCompletedTasks([...ALL_TASK_IDS]);
-            Alert.alert("Sukses", "Project telah diselesaikan!");
+          onPress: async () => {
+            const { error } = await updateProject(id as string, {
+              status: 'Completed',
+              final_link: finalLink,
+              progress: 100
+            });
+            if (!error) {
+              setProjectStatus('Completed');
+              setCompletedTasks([...ALL_TASK_IDS]);
+              Alert.alert("Sukses", "Project telah diselesaikan!");
+            }
           } 
         }
       ]
@@ -78,8 +119,8 @@ export default function ProjectDetail() {
     return false;
   };
 
-  const toggleTask = (task: string) => {
-    if (userRole !== 'creator') {
+  const toggleTask = async (task: string) => {
+    if (role !== 'creator') {
       Alert.alert("Akses Ditolak", "Hanya Creator yang bisa mencentang tugas.");
       return;
     }
@@ -89,10 +130,24 @@ export default function ProjectDetail() {
       return;
     }
     
-    setCompletedTasks(prev => 
-      prev.includes(task) ? prev.filter(t => t !== task) : [...prev, task]
-    );
+    const newCompletedTasks = completedTasks.includes(task) 
+      ? completedTasks.filter(t => t !== task) 
+      : [...completedTasks, task];
+    
+    const newProgress = Math.round((newCompletedTasks.length / ALL_TASK_IDS.length) * 100);
+
+    const { error } = await updateProject(id as string, {
+      completed_tasks: newCompletedTasks,
+      progress: newProgress
+    });
+
+    if (!error) {
+      setCompletedTasks(newCompletedTasks);
+    }
   };
+
+  if (isLoading) return <View style={styles.containerCenter}><ActivityIndicator size="large" color="#f59e0b" /></View>;
+  if (!activeProject) return <View style={styles.containerCenter}><Text style={{color: 'white'}}>Project tidak ditemukan</Text></View>;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 20 }}>
@@ -115,7 +170,7 @@ export default function ProjectDetail() {
             numberOfLines={6}
             value={script}
             onChangeText={setScript}
-            editable={userRole === 'creator'}
+            editable={role === 'creator'}
             placeholder="Tulis naskah video di sini..."
             placeholderTextColor="#64748b"
           />
@@ -127,7 +182,7 @@ export default function ProjectDetail() {
             numberOfLines={6}
             value={equipment}
             onChangeText={setEquipment}
-            editable={userRole === 'creator'}
+            editable={role === 'creator'}
             placeholder="Contoh: Tripod, Mic Wireless, Sony A6400..."
             placeholderTextColor="#64748b"
           />
@@ -191,7 +246,7 @@ export default function ProjectDetail() {
                       key={task} 
                       style={[styles.taskItem, isDone && styles.taskItemDone, locked && styles.taskItemLocked]}
                       onPress={() => toggleTask(task)}
-                      activeOpacity={userRole === 'creator' && !locked ? 0.7 : 1}
+                      activeOpacity={role === 'creator' && !locked ? 0.7 : 1}
                     >
                       <MaterialIcons 
                         name={locked ? "lock" : (isDone ? "check-circle" : "radio-button-unchecked")} 
@@ -216,7 +271,7 @@ export default function ProjectDetail() {
                         <Text style={styles.linkText}>Buka Link Final (1080p)</Text>
                       </TouchableOpacity>
                     ) : (
-                      userRole === 'creator' && (
+                      role === 'creator' && (
                         <>
                           <Text style={styles.inputLabel}>Link Final G-Drive (1080p)</Text>
                           <TextInput
@@ -244,7 +299,7 @@ export default function ProjectDetail() {
                 <View style={styles.approvalCard}>
                   <Text style={styles.approvalTitle}>Area Preview & Approval</Text>
                   
-                  {userRole === 'creator' ? (
+                  {role === 'creator' ? (
                     <>
                       {feedback && !isApproved && (
                         <View style={styles.feedbackBox}>
@@ -314,6 +369,7 @@ export default function ProjectDetail() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#020617' },
+  containerCenter: { flex: 1, backgroundColor: '#020617', justifyContent: 'center', alignItems: 'center' },
   header: { marginBottom: 30 },
   badge: { color: '#f59e0b', fontSize: 12, fontWeight: 'bold', marginBottom: 10 },
   title: { color: 'white', fontSize: 24, fontWeight: 'bold' },
