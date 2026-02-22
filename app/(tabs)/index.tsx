@@ -4,54 +4,19 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import RoboLogo from '../../components/RoboLogo'; // <-- Import Logo SVG kita
-import { useAuth } from '../../context/AuthContext';
+import { fetchHighlights, fetchNews, getRandomSpotlightUser } from '../../lib/studioApi';
 import { getAllCourses } from '../../lib/supabase';
-import { getRandomSpotlightUser } from '../../lib/studioApi';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { role } = useAuth();
   const [greeting, setGreeting] = useState('Selamat Datang,');
   const [profile, setProfile] = useState<any>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
 
-  const [isBotLoading, setIsBotLoading] = useState(false);
   const [news, setNews] = useState<any[]>([]);
 
-  // Dummy Data Carousel
-  const carouselImages = [
-    'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800',
-    'https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?w=800',
-    'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800',
-  ];
-
   const [spotlightUser, setSpotlightUser] = useState<any>(null);
-
-  const handleAutoNewsBot = async () => {
-    setIsBotLoading(true);
-    try {
-      const response = await fetch('https://api-berita-indonesia.vercel.app/cnn/teknologi/');
-      const json = await response.json();
-      
-      if (json.success) {
-        const posts = json.data.posts.slice(0, 5).map((post: any) => ({
-          title: post.title,
-          link: post.link,
-          image: post.thumbnail,
-          date: new Date(post.pubDate).toLocaleDateString('id-ID'),
-        }));
-        setNews(posts);
-        Alert.alert("Sukses", "Bot berhasil menarik 5 berita terbaru dari CNN!");
-      } else {
-        throw new Error("Gagal mengambil data");
-      }
-    } catch (error) {
-      Alert.alert("Error", "Gagal menghubungi Bot Berita.");
-    } finally {
-      setIsBotLoading(false);
-    }
-  };
 
   // Muat profil setiap kali halaman difokuskan agar foto selalu update
   useFocusEffect(
@@ -91,6 +56,26 @@ export default function HomeScreen() {
     };
     fetchSpotlight();
   }, []);
+
+  const [carouselImages, setCarouselImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    const loadHighlightsAndNews = async () => {
+      // Load Highlights
+      const { data: highlightsData, error: highlightsError } = await fetchHighlights();
+      if (highlightsError) console.error("Error fetching highlights:", highlightsError);
+      else setCarouselImages(highlightsData?.map((h: any) => h.image_url) || []);
+
+      // Load News
+      const { data: newsData, error: newsError } = await fetchNews();
+      if (newsError) console.error("Error fetching news:", newsError);
+      else setNews(newsData || []);
+    };
+    loadHighlightsAndNews();
+  }, []);
+
+
+
 
   // Fungsi interaktif untuk Tools
   const handleToolPress = (toolName: string) => {
@@ -190,12 +175,7 @@ export default function HomeScreen() {
         
         {/* 1. CAROUSEL BANNER */}
         <View style={[styles.sectionHeader, { marginTop: 30 }]}>
-          <Text style={styles.sectionTitle}>Weekly Highlights</Text>
-          {role === 'super_admin' && (
-            <TouchableOpacity onPress={() => Alert.alert("Admin", "Fitur Edit Banner segera hadir.")}>
-              <Text style={styles.adminActionText}>Edit Banner</Text>
-            </TouchableOpacity>
-          )}
+          <Text style={styles.sectionTitle}>Weekly Highlights</Text>          
         </View>
         
         <ScrollView 
@@ -231,20 +211,7 @@ export default function HomeScreen() {
 
         {/* 3. NEWS FEED & BOT */}
         <View style={[styles.sectionHeader, { marginTop: 30 }]}>
-          <Text style={styles.sectionTitle}>Berita Teknologi Terkini</Text>
-          {role === 'super_admin' && (
-            <TouchableOpacity 
-              style={styles.botBtn} 
-              onPress={handleAutoNewsBot}
-              disabled={isBotLoading}
-            >
-              {isBotLoading ? (
-                <ActivityIndicator size="small" color="#020617" />
-              ) : (
-                <Text style={styles.botBtnText}>🤖 Tarik Berita Otomatis</Text>
-              )}
-            </TouchableOpacity>
-          )}
+          <Text style={styles.sectionTitle}>Berita Teknologi Terkini</Text>          
         </View>
 
         <View style={styles.newsContainer}>
@@ -255,7 +222,7 @@ export default function HomeScreen() {
                 style={styles.newsCard}
                 onPress={() => Linking.openURL(item.link)}
               >
-                <Image source={{ uri: item.image }} style={styles.newsImage} />
+                <Image source={{ uri: item.image_url }} style={styles.newsImage} />
                 <View style={styles.newsInfo}>
                   <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
                   <Text style={styles.newsDate}>{item.date}</Text>

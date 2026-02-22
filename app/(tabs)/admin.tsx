@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, Viewas
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { addHighlight, addNewsBatch } from '../../lib/studioApi';
 
 export default function AdminPanel() {
   const router = useRouter();
@@ -27,6 +28,40 @@ export default function AdminPanel() {
     setSelectedRole(user.role === 'user' ? 'creator' : user.role);
     setSelectedTeam(user.teamId);
     setIsAssignModalOpen(true);
+  };
+
+  // State & Fungsi untuk Manajemen Konten Publik
+  const [newBannerUrl, setNewBannerUrl] = useState('');
+  const [isBotLoading, setIsBotLoading] = useState(false);
+
+  const handleAddBanner = async () => {
+    if (!newBannerUrl) {
+      Alert.alert("Error", "URL Banner tidak boleh kosong.");
+      return;
+    }
+    const { error } = await addHighlight(newBannerUrl);
+    if (error) {
+      Alert.alert("Gagal", "Gagal menambahkan banner: " + error);
+    } else {
+      Alert.alert("Sukses", "Banner berhasil ditambahkan!");
+      setNewBannerUrl('');
+    }
+  };
+
+  const handleAutoNewsBot = async () => {
+    setIsBotLoading(true);
+    try {
+      const response = await fetch('https://api-berita-indonesia.vercel.app/cnn/teknologi/');
+      const json = await response.json();
+      if (json.success) {
+        const formattedNews = json.data.posts.slice(0, 5).map((post: any) => ({
+          title: post.title, link: post.link, image_url: post.thumbnail, published_date: new Date(post.pubDate).toISOString()
+        }));
+        await addNewsBatch(formattedNews);
+        Alert.alert("Sukses", "Bot berhasil menarik 5 berita terbaru dari CNN!");
+      } else throw new Error("Gagal mengambil data dari API.");
+    } catch (error: any) { Alert.alert("Error", "Gagal menghubungi Bot Berita: " + error.message); }
+    finally { setIsBotLoading(false); }
   };
 
   const handleSaveAssignment = () => {
@@ -126,6 +161,42 @@ export default function AdminPanel() {
               </TouchableOpacity>
             </View>
           ))}
+        </View>
+
+        {/* Manajemen Konten Publik */}
+        <View style={styles.recentSection}>
+          <Text style={styles.sectionTitle}>Manajemen Konten Publik</Text>
+          
+          {/* Tarik Berita CNN */}
+          <Text style={styles.subHeader}>Berita Teknologi</Text>
+          <TouchableOpacity 
+            style={[styles.mainAction, { backgroundColor: '#3b82f6', marginBottom: 20 }]} 
+            onPress={handleAutoNewsBot}
+            disabled={isBotLoading}
+          >
+            {isBotLoading ? (
+              <ActivityIndicator size="small" color="#020617" />
+            ) : (
+              <>
+                <Ionicons name="newspaper" size={24} color="#020617" />
+                <Text style={styles.mainActionText}>🤖 Tarik Berita CNN ke Home</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {/* Tambah Banner Carousel */}
+          <Text style={styles.subHeader}>Banner Weekly Highlights</Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder="URL Gambar Banner (contoh: https://unsplash.com/...)"
+            placeholderTextColor="#64748b"
+            value={newBannerUrl}
+            onChangeText={setNewBannerUrl}
+          />
+          <TouchableOpacity style={[styles.mainAction, { backgroundColor: '#f59e0b' }]} onPress={handleAddBanner}>
+            <Ionicons name="image" size={24} color="#020617" />
+            <Text style={styles.mainActionText}>Tambah Banner</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.recentSection}>
@@ -228,8 +299,8 @@ const styles = StyleSheet.create({
   mainAction: { backgroundColor: '#f59e0b', flexDirection: 'row', padding: 18, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginTop: 25 },
   mainActionText: { color: '#020617', fontWeight: 'bold', marginLeft: 10, letterSpacing: 1 },
   recentSection: { marginTop: 30, backgroundColor: '#0f172a', padding: 20, borderRadius: 20 },
-  sectionTitle: { color: 'white', fontWeight: 'bold', marginBottom: 15 },
-  logText: { color: '#64748b', fontSize: 12, marginBottom: 10, fontFamil1case', marginBottom: 10 },
+  sectionTitle: { color: 'white', fontWeight: 'bold', marginBottom: 15 }, // Re-added missing closing bracket
+  logText: { color: '#64748b', fontSize: 12, marginBottom: 10, fontFamily: 'monospace' }, // Corrected typo and added fontFamily
   userItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#1e293b' },
   userName: { color: 'white', fontSize: 14, fontWeight: 'bold' },
   userEmail: { color: '#64748b', fontSize: 12 },
@@ -247,6 +318,10 @@ const styles = StyleSheet.create({
   roleOptionActive: { backgroundColor: '#f59e0b', borderColor: '#f59e0b' },
   teamOption: { width: '22%', alignItems: 'center', paddingVertical: 10, borderRadius: 10, backgroundColor: '#1e293b', borderWidth: 1, borderColor: '#334155' },
   teamOptionActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
+  textInput: { // Added textInput style for admin panel
+    backgroundColor: '#1e293b', color: 'white', padding: 15, borderRadius: 12, 
+    borderWidth: 1, borderColor: '#334155', marginBottom: 15 
+  },
   roleOptionText: { color: '#94a3b8', fontSize: 11, fontWeight: 'bold' },
   infoTextAmber: { color: '#f59e0b', fontSize: 12, marginBottom: 20, fontStyle: 'italic' },
   infoTextPurple: { color: '#a78bfa', fontSize: 12, marginBottom: 20, fontStyle: 'italic' },

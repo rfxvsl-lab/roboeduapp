@@ -83,3 +83,64 @@ export const getRandomSpotlightUser = async () => {
     return null;
   }
 };
+
+/**
+ * Mengambil semua highlight (banner)
+ */
+export const fetchHighlights = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('highlights')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error: any) {
+    return { data: null, error: error.message };
+  }
+};
+
+/**
+ * Menambahkan highlight baru
+ */
+export const addHighlight = async (imageUrl: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('highlights')
+      .insert([{ image_url: imageUrl }])
+      .select();
+    if (error) throw error;
+    return { data: data[0], error: null };
+  } catch (error: any) {
+    return { data: null, error: error.message };
+  }
+};
+
+/**
+ * Mengambil semua berita
+ */
+export const fetchNews = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('news')
+      .select('*')
+      .order('published_date', { ascending: false });
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error: any) {
+    return { data: null, error: error.message };
+  }
+};
+
+/**
+ * Menambahkan batch berita baru
+ */
+export const addNewsBatch = async (newsItems: any[]) => {
+  try {
+    const { data, error } = await supabase.from('news').insert(newsItems).select();
+    if (error) throw error;
+    return { data, error: null };
+  } catch (error: any) {
+    return { data: null, error: error.message };
+  }
+};
