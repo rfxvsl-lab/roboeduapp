@@ -3,8 +3,10 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ALL_TASK_IDS, WORKFLOW_STEPS } from '../../../constants/StudioData';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext'; // Import useAuth
+import { sendPushNotification } from '../../../lib/notifications'; // Import sendPushNotification
 import { fetchProjectById, updateProject } from '../../../lib/studioApi';
+import { supabase } from '../../../lib/supabase'; // Import supabase
 
 export default function ProjectDetail() {
   const { id } = useLocalSearchParams();
@@ -48,6 +50,33 @@ export default function ProjectDetail() {
     setIsLoading(false);
   };
 
+  // Helper function untuk mengirim notifikasi ke anggota tim
+  const notifyTeamMembers = async (targetTeamId: string, targetRole: string, title: string, body: string) => {
+    try {
+      const { data: currentUser } = await supabase.auth.getUser();
+      const currentUserId = currentUser?.user?.id;
+
+      const { data: users, error } = await supabase
+        .from('user_profiles')
+        .select('push_token')
+        .eq('team_id', targetTeamId)
+        .eq('role', targetRole)
+        .not('user_id', 'eq', currentUserId); // Jangan kirim ke diri sendiri
+
+      if (error) throw error;
+
+      if (users && users.length > 0) {
+        for (const user of users) {
+          if (user.push_token) {
+            await sendPushNotification(user.push_token, title, body, { projectId: id });
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to send notification:', err);
+    }
+  };
+
   const handleApproval = async (approved: boolean) => {
     const updateData = {
       is_approved: approved,
@@ -59,9 +88,11 @@ export default function ProjectDetail() {
       setIsApproved(approved);
       if (approved) {
         setFeedback('');
+        await notifyTeamMembers(activeProject.team_id, 'creator', 'Preview Disetujui! 🎉', 'Supervisor telah menyetujui preview. Silakan lanjut ke Final.');
         Alert.alert("Sukses", "Preview di-Approve! Step 5 sekarang terbuka.");
       } else {
         setFeedback(feedbackInput);
+        await notifyTeamMembers(activeProject.team_id, 'creator', 'Ada Revisi Baru ⚠️', 'Supervisor memberikan catatan revisi untuk preview project.');
         Alert.alert("Revisi", "Catatan revisi telah dikirim ke tim!");
       }
     }
@@ -71,6 +102,7 @@ export default function ProjectDetail() {
     const { error } = await updateProject(id as string, { preview_link: previewLink });
     if (!error) {
       Alert.alert("Sukses", "Link Preview berhasil dikirim ke Supervisor.");
+      await notifyTeamMembers(activeProject.team_id, 'supervisor', 'Preview Siap Direview!', 'Tim Creator telah mengunggah link preview baru.');
     }
   };
 
