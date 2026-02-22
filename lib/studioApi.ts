@@ -62,3 +62,24 @@ export const updateProject = async (id: string, updateData: any) => {
     return { data: null, error: error.message };
   }
 };
+
+/**
+ * Mengambil satu anggota tim secara acak untuk Spotlight di halaman Home
+ */
+export const getRandomSpotlightUser = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .neq('role', 'user');
+
+    if (error) throw error;
+    if (!data || data.length === 0) return null;
+
+    const randomUser = data[Math.floor(Math.random() * data.length)];
+    return randomUser;
+  } catch (error: any) {
+    console.error('Error fetching spotlight user:', error.message);
+    return null;
+  }
+};

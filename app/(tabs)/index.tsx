@@ -1,17 +1,57 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useFocusEffect } from 'expo-router';
-import React, { useEffect, useState, useCallback } from 'react';
-import { ActivityIndicator, Alert, Image, Platform, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Image, Linking, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import RoboLogo from '../../components/RoboLogo'; // <-- Import Logo SVG kita
+import { useAuth } from '../../context/AuthContext';
 import { getAllCourses } from '../../lib/supabase';
+import { getRandomSpotlightUser } from '../../lib/studioApi';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { role } = useAuth();
   const [greeting, setGreeting] = useState('Selamat Datang,');
   const [profile, setProfile] = useState<any>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
+
+  const [isBotLoading, setIsBotLoading] = useState(false);
+  const [news, setNews] = useState<any[]>([]);
+
+  // Dummy Data Carousel
+  const carouselImages = [
+    'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800',
+    'https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?w=800',
+    'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800',
+  ];
+
+  const [spotlightUser, setSpotlightUser] = useState<any>(null);
+
+  const handleAutoNewsBot = async () => {
+    setIsBotLoading(true);
+    try {
+      const response = await fetch('https://api-berita-indonesia.vercel.app/cnn/teknologi/');
+      const json = await response.json();
+      
+      if (json.success) {
+        const posts = json.data.posts.slice(0, 5).map((post: any) => ({
+          title: post.title,
+          link: post.link,
+          image: post.thumbnail,
+          date: new Date(post.pubDate).toLocaleDateString('id-ID'),
+        }));
+        setNews(posts);
+        Alert.alert("Sukses", "Bot berhasil menarik 5 berita terbaru dari CNN!");
+      } else {
+        throw new Error("Gagal mengambil data");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Gagal menghubungi Bot Berita.");
+    } finally {
+      setIsBotLoading(false);
+    }
+  };
 
   // Muat profil setiap kali halaman difokuskan agar foto selalu update
   useFocusEffect(
@@ -42,6 +82,14 @@ export default function HomeScreen() {
     else if (hour < 15) setGreeting('Selamat Siang,');
     else if (hour < 18) setGreeting('Selamat Sore,');
     else setGreeting('Selamat Malam,');
+  }, []);
+
+  useEffect(() => {
+    const fetchSpotlight = async () => {
+      const user = await getRandomSpotlightUser();
+      setSpotlightUser(user);
+    };
+    fetchSpotlight();
   }, []);
 
   // Fungsi interaktif untuk Tools
@@ -140,6 +188,88 @@ export default function HomeScreen() {
           />
         </View>
         
+        {/* 1. CAROUSEL BANNER */}
+        <View style={[styles.sectionHeader, { marginTop: 30 }]}>
+          <Text style={styles.sectionTitle}>Weekly Highlights</Text>
+          {role === 'super_admin' && (
+            <TouchableOpacity onPress={() => Alert.alert("Admin", "Fitur Edit Banner segera hadir.")}>
+              <Text style={styles.adminActionText}>Edit Banner</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={styles.carouselScroll}
+          contentContainerStyle={styles.carouselContainer}
+        >
+          {carouselImages.map((img, index) => (
+            <Image key={index} source={{ uri: img }} style={styles.carouselImage} />
+          ))}
+        </ScrollView>
+
+        {/* 2. SPOTLIGHT TIM */}
+        <Text style={[styles.sectionTitle, { marginTop: 30, marginBottom: 15 }]}>Mengenal Tim Kami</Text>
+        {spotlightUser ? (
+          <View style={styles.spotlightCard}>
+            <Image 
+              source={{ uri: spotlightUser.avatar_url || `https://ui-avatars.com/api/?name=${(spotlightUser.name || 'User').replace(/\s/g, '+')}&background=f59e0b&color=fff` }} 
+              style={styles.spotlightAvatar} 
+            />
+            <View style={styles.spotlightInfo}>
+              <Text style={styles.spotlightName}>{spotlightUser.name}</Text>
+              <Text style={styles.spotlightRole}>{spotlightUser.role || 'Team Member'}</Text>
+              <Text style={styles.spotlightBio}>{spotlightUser.bio || "Anggota tim luar biasa RoboEdu!"}</Text>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>Belum ada tim yang disorot hari ini.</Text>
+          </View>
+        )}
+
+        {/* 3. NEWS FEED & BOT */}
+        <View style={[styles.sectionHeader, { marginTop: 30 }]}>
+          <Text style={styles.sectionTitle}>Berita Teknologi Terkini</Text>
+          {role === 'super_admin' && (
+            <TouchableOpacity 
+              style={styles.botBtn} 
+              onPress={handleAutoNewsBot}
+              disabled={isBotLoading}
+            >
+              {isBotLoading ? (
+                <ActivityIndicator size="small" color="#020617" />
+              ) : (
+                <Text style={styles.botBtnText}>🤖 Tarik Berita Otomatis</Text>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.newsContainer}>
+          {news.length > 0 ? (
+            news.map((item, index) => (
+              <TouchableOpacity 
+                key={index} 
+                style={styles.newsCard}
+                onPress={() => Linking.openURL(item.link)}
+              >
+                <Image source={{ uri: item.image }} style={styles.newsImage} />
+                <View style={styles.newsInfo}>
+                  <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
+                  <Text style={styles.newsDate}>{item.date}</Text>
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Ionicons name="newspaper-outline" size={40} color="#1e293b" />
+              <Text style={styles.emptyText}>Belum ada berita hari ini.</Text>
+            </View>
+          )}
+        </View>
+
         <View style={{ height: 100 }} />
       </ScrollView>
     </View>
@@ -194,4 +324,47 @@ const styles = StyleSheet.create({
   toolItem: { width: '30%', alignItems: 'center' },
   toolIcon: { padding: 18, borderRadius: 22, marginBottom: 10 },
   toolLabel: { color: '#94a3b8', fontSize: 12, textAlign: 'center', fontWeight: '500' },
+  adminActionText: { color: '#f59e0b', fontSize: 12, fontWeight: 'bold' },
+  carouselScroll: { marginBottom: 10 },
+  carouselContainer: { paddingRight: 10 },
+  carouselImage: { 
+    width: 300, 
+    height: 150, 
+    borderRadius: 16, 
+    marginRight: 15,
+    backgroundColor: '#0f172a'
+  },
+  spotlightCard: {
+    flexDirection: 'row',
+    backgroundColor: '#0f172a',
+    padding: 15,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+    alignItems: 'center',
+    marginBottom: 10
+  },
+  spotlightAvatar: { width: 70, height: 70, borderRadius: 35, borderWidth: 2, borderColor: '#f59e0b' },
+  spotlightInfo: { flex: 1, marginLeft: 15 },
+  spotlightName: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  spotlightRole: { color: '#f59e0b', fontSize: 12, fontWeight: 'bold', marginTop: 2 },
+  spotlightBio: { color: '#94a3b8', fontSize: 11, marginTop: 5, lineHeight: 16 },
+  botBtn: { backgroundColor: '#f59e0b', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  botBtnText: { color: '#020617', fontSize: 10, fontWeight: 'bold' },
+  newsContainer: { marginTop: 10 },
+  newsCard: { 
+    flexDirection: 'row', 
+    backgroundColor: '#0f172a', 
+    padding: 12, 
+    borderRadius: 16, 
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#1e293b'
+  },
+  newsImage: { width: 80, height: 60, borderRadius: 8 },
+  newsInfo: { flex: 1, marginLeft: 12, justifyContent: 'center' },
+  newsTitle: { color: 'white', fontSize: 13, fontWeight: 'bold', lineHeight: 18 },
+  newsDate: { color: '#64748b', fontSize: 10, marginTop: 5 },
+  emptyState: { alignItems: 'center', marginTop: 20, padding: 30 },
+  emptyText: { color: '#475569', fontSize: 12, marginTop: 10 }
 });
