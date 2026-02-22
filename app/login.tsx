@@ -40,7 +40,7 @@ export default function LoginScreen() {
       };
       await AsyncStorage.setItem('@user_profile', JSON.stringify(profileData));
 
-      login(); // Update state global
+      login(); // Panggil fungsi login di AuthContext
       router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert('Login Gagal', error.message);

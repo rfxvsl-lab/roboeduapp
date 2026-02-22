@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react'; // Import useEffect
 import { registerForPushNotificationsAsync } from '../lib/notifications';
-import { supabase } from '../lib/supabase';
+import { supabase, getUserProfile } from '../lib/supabase'; // Import getUserProfile
 
 const AuthContext = createContext({
   isLoggedIn: false,
@@ -36,19 +36,63 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const login = (userRole: string = 'user', userTeamId: string | null = null) => {
-    setIsLoggedIn(true);
-    setRole(userRole);
-    setTeamId(userTeamId);
-    // Panggil setupPushNotifications setelah login dan user ID tersedia
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
+  // Fungsi untuk memuat sesi pengguna dan profilnya
+  const loadUserSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { user } = session;
+      // Ambil profil lengkap dari tabel user_profiles
+      const dbProfile = await getUserProfile(user.id).catch(() => null);
+
+      if (dbProfile) {
+        setIsLoggedIn(true);
+        setRole(dbProfile.role || 'user');
+        setTeamId(dbProfile.team_id || null);
+        // Anda bisa memuat enrolledCourses/completedCourses dari dbProfile di sini jika ada
+        // setEnrolledCourses(dbProfile.enrolled_courses || []);
+        // setCompletedCourses(dbProfile.completed_courses || []);
+        setupPushNotifications(user.id);
+      } else {
+        // Sesi ada tapi profil belum lengkap (misal: baru daftar tapi belum buat profil)
+        setIsLoggedIn(true);
+        setRole('user'); // Default role jika profil tidak ditemukan
+        setTeamId(null);
         setupPushNotifications(user.id);
       }
+    } else {
+      // Tidak ada sesi yang tersimpan
+      setIsLoggedIn(false);
+      setRole('user');
+      setTeamId(null);
+      setEnrolledCourses([]);
+      setCompletedCourses([]);
+      setExpoPushToken(null);
+    }
+  };
+
+  // Effect untuk memeriksa sesi saat aplikasi dimulai
+  useEffect(() => {
+    loadUserSession();
+
+    // Listener untuk perubahan status autentikasi (misal: logout dari tab lain, token refresh)
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (_event === 'SIGNED_IN' || _event === 'SIGNED_OUT' || _event === 'TOKEN_REFRESHED') {
+        loadUserSession(); // Muat ulang sesi jika ada perubahan
+      }
     });
+
+    return () => {
+      authListener?.unsubscribe(); // Bersihkan listener saat komponen unmount
+    };
+  }, []); // Hanya dijalankan sekali saat mount
+
+  const login = () => { // Fungsi login sekarang hanya memicu pemuatan sesi
+    setIsLoggedIn(true);
+    loadUserSession(); // Panggil untuk memuat data sesi dan profil terbaru
   };
   
-  const logout = () => {
+  const logout = async () => { // Jadikan async untuk memanggil signOut Supabase
+    await supabase.auth.signOut(); // Hapus sesi dari Supabase
     setIsLoggedIn(false);
     setRole('user');
     setTeamId(null);

@@ -35,7 +35,7 @@ export default function RegisterScreen() {
       const initialProfile = await createUserProfile(newAccount!.id, name, email);
       await AsyncStorage.setItem('@user_profile', JSON.stringify(initialProfile));
 
-      login(); // Update state global
+      login(); // Panggil fungsi login di AuthContext
       
       router.replace({ pathname: '/(tabs)/profile', params: { firstLogin: 'true' } });
     } catch (error: any) {
