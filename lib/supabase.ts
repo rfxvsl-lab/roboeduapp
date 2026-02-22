@@ -74,7 +74,7 @@ export const createUserProfile = async (userId: string, name: string, email: str
         email,
         bio: 'Robotic Enthusiast',
         institution: 'RoboEdu Academy',
-        role: email === 'hilal.alhamdi22@gmail.com' ? 'admin' : 'user'
+        role: email === 'hilal.alhamdi22@gmail.com' ? 'super_admin' : 'user'
       },
     ])
     .select();

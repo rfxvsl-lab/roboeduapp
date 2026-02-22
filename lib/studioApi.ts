@@ -8,7 +8,7 @@ export const fetchStudioProjects = async (teamId?: string | null, role?: string)
     let query = supabase.from('studio_projects').select('*').order('created_at', { ascending: false });
 
     // Filter berdasarkan tim jika bukan admin/supervisor
-    if (teamId && role !== 'super_admin' && role !== 'supervisor' && role !== 'admin') {
+    if (teamId && role !== 'super_admin' && role !== 'supervisor') {
       query = query.eq('team_id', teamId);
     }
 

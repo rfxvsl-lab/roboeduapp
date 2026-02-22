@@ -152,7 +152,7 @@ export default function ProjectDetail() {
   };
 
   const toggleTask = async (task: string) => {
-    if (role !== 'creator') {
+    if (role !== 'creator' && role !== 'tim_khusus') {
       Alert.alert("Akses Ditolak", "Hanya Creator yang bisa mencentang tugas.");
       return;
     }
@@ -202,7 +202,7 @@ export default function ProjectDetail() {
             numberOfLines={6}
             value={script}
             onChangeText={setScript}
-            editable={role === 'creator'}
+            editable={role === 'creator' || role === 'tim_khusus'}
             placeholder="Tulis naskah video di sini..."
             placeholderTextColor="#64748b"
           />
@@ -214,7 +214,7 @@ export default function ProjectDetail() {
             numberOfLines={6}
             value={equipment}
             onChangeText={setEquipment}
-            editable={role === 'creator'}
+            editable={role === 'creator' || role === 'tim_khusus'}
             placeholder="Contoh: Tripod, Mic Wireless, Sony A6400..."
             placeholderTextColor="#64748b"
           />

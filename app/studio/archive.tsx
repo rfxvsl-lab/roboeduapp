@@ -2,9 +2,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Alert, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { DUMMY_PROJECTS, TEAMS } from '../../constants/StudioData';
+import { useAuth } from '../../context/AuthContext';
 
 export default function ProjectArchive() {
-  const userRole = 'supervisor'; // Dummy role untuk testing UI
+  const { role } = useAuth();
 
   // Filter project yang sudah selesai (Completed)
   const archivedProjects = DUMMY_PROJECTS.filter(project => project.status === 'Completed');
@@ -37,7 +38,7 @@ export default function ProjectArchive() {
         <Text style={styles.finalLinkText}>Buka Hasil Final</Text>
       </TouchableOpacity>
 
-      {userRole === 'supervisor' && (
+      {(role === 'supervisor' || role === 'super_admin') && (
         <TouchableOpacity 
           style={styles.deleteBtn}
           onPress={() => Alert.alert("Hapus Permanen", "Yakin ingin menghapus arsip ini secara permanen?", [

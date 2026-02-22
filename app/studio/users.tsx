@@ -1,9 +1,10 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Alert, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../../context/AuthContext';
 
 export default function UserManagement() {
-  const userRole = 'super_admin'; // Simulasi role untuk pengecekan akses
+  const { role } = useAuth();
 
   // 1. Dummy Data State
   const [pendingUsers, setPendingUsers] = useState([
@@ -25,7 +26,7 @@ export default function UserManagement() {
   });
 
   // 5. Peringatan Akses
-  if (userRole !== 'super_admin') {
+  if (role !== 'super_admin') {
     return (
       <View style={styles.deniedContainer}>
         <MaterialIcons name="lock" size={80} color="#ef4444" />
