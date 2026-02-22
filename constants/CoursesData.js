@@ -3,7 +3,7 @@ export const COURSES = [
     id: '1',
     title: 'Pemrograman Arduino Dasar',
     category: 'ROBOTIK',
-    price: 'GRATIS',
+    price: 'GRATIS', // Perbaiki properti image
     image: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=400',
     description: 'Belajar dasar-dasar microcontroller dengan Arduino Uno. Kursus ini dirancang khusus untuk pemula yang belum pernah menyentuh koding atau merakit sirkuit elektronik sebelumnya. Di akhir kelas, kamu akan bisa membuat sistem lampu otomatis.',
     level: 'Pemula',

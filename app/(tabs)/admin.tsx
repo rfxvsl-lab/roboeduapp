@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { addHighlight, addNewsBatch } from '../../lib/studioApi';
+import { getAllUsers, getCoursesCount, getHardwareCount, getUsersCount, updateUserAssignment } from '../../lib/supabase';
 
 export default function AdminPanel() {
   const router = useRouter();
@@ -12,12 +13,7 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
 
   // State Manajemen Penempatan Tim
-  const [usersList, setUsersList] = useState([
-    { id: '1', name: 'Andi Creator', email: 'andi@example.com', role: 'user', teamId: null },
-    { id: '2', name: 'Budi Supervisor', email: 'budi@example.com', role: 'supervisor', teamId: 'all' },
-    { id: '3', name: 'Cici Editor', email: 'cici@example.com', role: 'creator', teamId: 'T1' },
-    { id: '4', name: 'Dedi Newbie', email: 'dedi@example.com', role: 'user', teamId: null },
-  ]);
+  const [usersList, setUsersList] = useState<any[]>([]);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [selectedRole, setSelectedRole] = useState('creator');
@@ -26,7 +22,7 @@ export default function AdminPanel() {
   const handleOpenAssignModal = (user: any) => {
     setSelectedUser(user);
     setSelectedRole(user.role === 'user' ? 'creator' : user.role);
-    setSelectedTeam(user.teamId);
+    setSelectedTeam(user.team_id);
     setIsAssignModalOpen(true);
   };
 
@@ -64,7 +60,7 @@ export default function AdminPanel() {
     finally { setIsBotLoading(false); }
   };
 
-  const handleSaveAssignment = () => {
+  const handleSaveAssignment = async () => {
     if (selectedRole === 'creator' && !selectedTeam) {
       Alert.alert("Error", "Creator wajib memilih tim creative (1-4).");
       return;
@@ -74,30 +70,34 @@ export default function AdminPanel() {
     if (selectedRole === 'tim_khusus') finalTeamId = 'T5';
     if (selectedRole === 'supervisor') finalTeamId = 'all';
 
-    setUsersList(prev => prev.map(u => 
-      u.id === selectedUser.id 
-        ? { ...u, role: selectedRole, teamId: finalTeamId } 
-        : u
-    ));
+    try {
+      await updateUserAssignment(selectedUser.user_id, selectedRole, finalTeamId);
+      
+      // Refresh list lokal
+      fetchData();
+      setIsAssignModalOpen(false);
+      Alert.alert("Sukses", `Penempatan ${selectedUser.name} berhasil diperbarui.`);
+    } catch (error: any) {
+      Alert.alert("Error", "Gagal menyimpan penempatan: " + error.message);
+    }
+  };
 
-    setIsAssignModalOpen(false);
-    Alert.alert("Sukses", `Penempatan ${selectedUser.name} berhasil diperbarui.`);
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      setUserCount(await getUsersCount());
+      setCourseCount(await getCoursesCount());
+      setHardwareCount(await getHardwareCount());
+      setUsersList(await getAllUsers());
+    } catch (error: any) {
+      Alert.alert("Error", "Gagal memuat data admin: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useFocusEffect(
     useCallback(() => {
-      const fetchData = async () => {
-        setLoading(true);
-        try {
-          setUserCount(await getUsersCount());
-          setCourseCount(await getCoursesCount());
-          setHardwareCount(await getHardwareCount());
-        } catch (error: any) {
-          Alert.alert("Error", "Gagal memuat data admin: " + error.message);
-        } finally {
-          setLoading(false);
-        }
-      };
       fetchData();
     }, [])
   );
@@ -134,8 +134,8 @@ export default function AdminPanel() {
           <Text style={styles.sectionTitle}>Manajemen Penempatan Tim</Text>
           
           <Text style={styles.subHeader}>Menunggu Penempatan</Text>
-          {usersList.filter(u => u.role === 'user').map(user => (
-            <View key={user.id} style={styles.userItem}>
+          {usersList.filter(u => u.role === 'user').map((user, idx) => (
+            <View key={user.user_id || idx} style={styles.userItem}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.userName}>{user.name}</Text>
                 <Text style={styles.userEmail}>{user.email}</Text>
@@ -147,13 +147,13 @@ export default function AdminPanel() {
           ))}
 
           <Text style={[styles.subHeader, { marginTop: 20 }]}>User Studio Terdaftar</Text>
-          {usersList.filter(u => u.role !== 'user').map(user => (
-            <View key={user.id} style={styles.userItem}>
+          {usersList.filter(u => u.role !== 'user').map((user, idx) => (
+            <View key={user.user_id || idx} style={styles.userItem}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.userName}>{user.name}</Text>
                 <View style={{ flexDirection: 'row', gap: 5, marginTop: 4 }}>
-                  <View style={styles.roleBadge}><Text style={styles.badgeText}>{user.role.toUpperCase()}</Text></View>
-                  <View style={[styles.roleBadge, { backgroundColor: '#1e293b' }]}><Text style={styles.badgeText}>TIM: {user.teamId}</Text></View>
+                  <View style={styles.roleBadge}><Text style={styles.badgeText}>{(user.role || '').toUpperCase()}</Text></View>
+                  <View style={[styles.roleBadge, { backgroundColor: '#1e293b' }]}><Text style={styles.badgeText}>TIM: {user.team_id || '-'}</Text></View>
                 </View>
               </View>
               <TouchableOpacity onPress={() => handleOpenAssignModal(user)}>

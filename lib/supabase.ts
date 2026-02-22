@@ -196,6 +196,12 @@ export const updateUserRole = async (userId: string, role: string) => {
   if (error) throw error;
 };
 
+// Update Role dan Team User
+export const updateUserAssignment = async (userId: string, role: string, teamId: string | null) => {
+  const { error } = await supabase.from('user_profiles').update({ role, team_id: teamId }).eq('user_id', userId);
+  if (error) throw error;
+};
+
 // Mengambil jumlah total kursus
 export const getCoursesCount = async () => {
   const { count, error } = await supabase

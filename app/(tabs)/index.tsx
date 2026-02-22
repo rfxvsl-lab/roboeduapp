@@ -57,23 +57,24 @@ export default function HomeScreen() {
     fetchSpotlight();
   }, []);
 
-  const [carouselImages, setCarouselImages] = useState<string[]>([]);
+  const [carouselImages, setCarouselImages] = useState<any[]>([]); // Ubah tipe data untuk menyimpan objek penuh jika diperlukan
 
-  useEffect(() => {
-    const loadHighlightsAndNews = async () => {
-      // Load Highlights
-      const { data: highlightsData, error: highlightsError } = await fetchHighlights();
-      if (highlightsError) console.error("Error fetching highlights:", highlightsError);
-      else setCarouselImages(highlightsData?.map((h: any) => h.image_url) || []);
+  useFocusEffect(
+    useCallback(() => {
+      const loadHighlightsAndNews = async () => {
+        // Load Highlights
+        const { data: highlightsData, error: highlightsError } = await fetchHighlights();
+        if (highlightsError) console.error("Error fetching highlights:", highlightsError);
+        else setCarouselImages(highlightsData || []);
 
-      // Load News
-      const { data: newsData, error: newsError } = await fetchNews();
-      if (newsError) console.error("Error fetching news:", newsError);
-      else setNews(newsData || []);
-    };
-    loadHighlightsAndNews();
-  }, []);
-
+        // Load News
+        const { data: newsData, error: newsError } = await fetchNews();
+        if (newsError) console.error("Error fetching news:", newsError);
+        else setNews(newsData || []);
+      };
+      loadHighlightsAndNews();
+    }, [])
+  );
 
 
 
@@ -185,7 +186,7 @@ export default function HomeScreen() {
           contentContainerStyle={styles.carouselContainer}
         >
           {carouselImages.map((img, index) => (
-            <Image key={index} source={{ uri: img }} style={styles.carouselImage} />
+            <Image key={index} source={{ uri: img.image_url }} style={styles.carouselImage} />
           ))}
         </ScrollView>
 
@@ -225,7 +226,7 @@ export default function HomeScreen() {
                 <Image source={{ uri: item.image_url }} style={styles.newsImage} />
                 <View style={styles.newsInfo}>
                   <Text style={styles.newsTitle} numberOfLines={2}>{item.title}</Text>
-                  <Text style={styles.newsDate}>{item.date}</Text>
+                  <Text style={styles.newsDate}>{new Date(item.published_date).toLocaleDateString('id-ID')}</Text>
                 </View>
               </TouchableOpacity>
             ))
@@ -292,14 +293,14 @@ const styles = StyleSheet.create({
   toolIcon: { padding: 18, borderRadius: 22, marginBottom: 10 },
   toolLabel: { color: '#94a3b8', fontSize: 12, textAlign: 'center', fontWeight: '500' },
   adminActionText: { color: '#f59e0b', fontSize: 12, fontWeight: 'bold' },
-  carouselScroll: { marginBottom: 10 },
+  carouselScroll: { marginBottom: 10, paddingLeft: 20 }, // Added paddingLeft for consistency
   carouselContainer: { paddingRight: 10 },
   carouselImage: { 
     width: 300, 
     height: 150, 
     borderRadius: 16, 
     marginRight: 15,
-    backgroundColor: '#0f172a'
+    backgroundColor: '#0f172a', // Placeholder background
   },
   spotlightCard: {
     flexDirection: 'row',
@@ -307,28 +308,28 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#f59e0b',
+    borderColor: '#f59e0b', // Accent border
     alignItems: 'center',
     marginBottom: 10
   },
-  spotlightAvatar: { width: 70, height: 70, borderRadius: 35, borderWidth: 2, borderColor: '#f59e0b' },
+  spotlightAvatar: { width: 70, height: 70, borderRadius: 35, borderWidth: 2, borderColor: '#f59e0b' }, // Accent border for avatar
   spotlightInfo: { flex: 1, marginLeft: 15 },
   spotlightName: { color: 'white', fontSize: 16, fontWeight: 'bold' },
   spotlightRole: { color: '#f59e0b', fontSize: 12, fontWeight: 'bold', marginTop: 2 },
   spotlightBio: { color: '#94a3b8', fontSize: 11, marginTop: 5, lineHeight: 16 },
-  botBtn: { backgroundColor: '#f59e0b', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  botBtn: { backgroundColor: '#f59e0b', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, // Accent button
   botBtnText: { color: '#020617', fontSize: 10, fontWeight: 'bold' },
   newsContainer: { marginTop: 10 },
   newsCard: { 
     flexDirection: 'row', 
     backgroundColor: '#0f172a', 
-    padding: 12, 
+    padding: 12, // Consistent padding
     borderRadius: 16, 
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#1e293b'
   },
-  newsImage: { width: 80, height: 60, borderRadius: 8 },
+  newsImage: { width: 80, height: 60, borderRadius: 8 }, // Image thumbnail
   newsInfo: { flex: 1, marginLeft: 12, justifyContent: 'center' },
   newsTitle: { color: 'white', fontSize: 13, fontWeight: 'bold', lineHeight: 18 },
   newsDate: { color: '#64748b', fontSize: 10, marginTop: 5 },
